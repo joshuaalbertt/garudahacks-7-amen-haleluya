@@ -704,18 +704,27 @@ function initMap(kind){
     ro.observe(el);
   }
 }
-/* pastikan map ada & terukur setelah view tampil */
+/* pastikan map ada & terukur setelah view tampil.
+   PENTING: pakai setTimeout, BUKAN requestAnimationFrame — rAF dibekukan
+   browser saat tab tidak fokus, membuat peta kadang tidak ter-init. */
 function showMap(kind){
   leafletReady(()=>{
     let tries=0;
     const attempt=()=>{
       if(!maps[kind]) initMap(kind);
       if(maps[kind]){ nudge(maps[kind]); return; }
-      if(tries++<12) requestAnimationFrame(()=>setTimeout(attempt,50));
+      if(tries++<40) setTimeout(attempt,120);
     };
-    requestAnimationFrame(attempt);
+    attempt();
   });
 }
+/* re-init & ukur ulang saat halaman kembali terlihat */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && S.user){
+    if(U.tab==='beranda') showMap('mini');
+    if(U.tab==='peta') showMap('full');
+  }
+});
 function buildZones(map, kind){
   const g = L.layerGroup();
   Z.forEach((z,i)=>{
