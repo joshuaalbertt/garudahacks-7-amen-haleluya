@@ -4,19 +4,19 @@
 
 ## **1. Executive Summary**
 
-JAGA adalah infrastruktur keselamatan kota yang menggabungkan **prediksi risiko kejahatan** , **pelaporan terverifikasi** , dan **asuransi mikro parametrik** untuk keluarga berpenghasilan rendah. Berfokus pada kejahatan jalanan/rumah di pilot kota Jakarta, JAGA tidak hanya memetakan bahaya, tetapi memberikan **perlindungan finansial otomatis** saat risiko terjadi. Dengan menjadikan Admin sebagai verifikator data dan memberinya insentif berbasis kinerja pencegahan, JAGA menciptakan ekosistem di mana birokrasi dan warga berpijak pada tujuan yang sama: keamanan yang terukur dan terjamin.
+JAGA adalah platform urban safety net yang menggabungkan **prediksi risiko kejahatan** , **pelaporan terverifikasi** , dan **asuransi mikro parametrik** untuk keluarga berpenghasilan rendah. Berfokus pada kejahatan di kota metropolitan seperti Jakarta, JAGA tidak hanya memetakan bahaya, tetapi memberikan **perlindungan finansial otomatis** saat risiko terjadi. Sistem ini memosisikan seorang administrator lokal sebagai verifikator di setiap wilayah dengan insentif berbasis pencegahan, sehingga warga dan jajaran birokrasi bisa bekerja sama demi mewujudkan lingkungan yang aman dan terukur.
 
 ## **2. Problem Statement**
 
 1. **Kerugian Finansial Akut:** Satu kejadian kriminal (pencurian/begal) bisa menghabiskan tabungan berbulan-bulan keluarga miskin, mendorong mereka lebih dalam ke kemiskinan.
 
-2. **Data Tidak Real-Time & Tertutup:** Data kejahatan Polri/BPS terpublikasi dengan lag bulanan. Warga tidak tahu risiko aktual kelurahan mereka hari ini.
+2. **Data Tidak Real-Time & Tertutup:** Data kejahatan Polri/BPS terpublikasi dengan lag bulanan. Warga tidak tahu risiko aktual yang ada di sekitar mereka hari ini.
 
 3. **Aplikasi Pelaporan Mandul:** Aplikasi yang ada berhenti di "lapor". Tidak ada konsekuensi finansial atau safety net dari laporan tersebut.
 
 4. **Fraud & Hoaks:** Pelaporan bebas tanpa verifikasi rentan disalahgunakan, merusak validitas data dan menghambat respon.
 
-5. **Tidak Ada Insentif Pencegahan bagi Birokrasi:** Admin tidak punya insentif ekonomi untuk menurunkan angka kejahatan di wilayahnya; seringkali malah cenderung menutupi agar terlihat aman.
+5. **Tidak Ada Insentif Pencegahan bagi Birokrasi:** Admin atau verifikator tidak punya insentif untuk menurunkan angka kejahatan di wilayahnya; seringkali malah cenderung menutupi agar terlihat aman.
 
 ## **3. Arsitektur Produk (3 Core Layers)**
 
@@ -24,11 +24,10 @@ JAGA adalah infrastruktur keselamatan kota yang menggabungkan **prediksi risiko 
 
 Mesin penghitung probabilitas kejahatan per kelurahan menggunakan metode aktuarial.
 
-**Input:** Data historis kejahatan BPS DKI Jakarta, data sosio-ekonomi (kepadatan, pengangguran), dan real-time feed laporan terverifikasi dari warga. **Model:**
+**Input:** Data historis kejahatan BPS DKI Jakarta dan real-time feed laporan terverifikasi dari warga. **Model:**
 
 Frequency Model: Poisson/Negative Binomial Regression.
 
-Credibility Weighting: PUT IMAGE!!!!!!!!!!!!!!!!!!!!
 
 **Output:** Crime Risk Score (1-100) per kelurahan, prediksi kejadian 24-72 jam, dan dasar harga premi asuransi.
 
@@ -90,10 +89,10 @@ $$ \text{Total Incentive} = \text{Pilar 1 (Data Integrity)} + \text{Pilar 2 (Ris
 
 |**Pilar**|**Mekanisme**|**Tujuan**|**Perhitungan**|
 |---|---|---|---|
-|**1. Data**<br>**Integrity**|Insentif dasar per laporan yang**divalidasi**|Membayar Lurah untuk jujur; mencegah<br>menutupi kasus|Jumlah Laporan Valid ×<br>RpX|
+|**1. Data**<br>**Integrity**|Insentif dasar per laporan yang**divalidasi**|Membayar kejujuran Admin; mencegah<br>menutupi kasus|Jumlah Laporan Valid ×<br>RpX|
 |**2. Risk**<br>**Mitigation**|Bonus jika Risk Index kelurahan**turun**<br>dibanding bulan sebelumnya (Delta)|Memotivasi tindakan nyata (siskamling,<br>patroli) setelah laporan masuk|(% Penurunan Risk Index<br>× Multiplier)|
 |**3.**<br>**Verification**<br>**Speed**|Bonus jika rata-rata waktu verifikasi < 2 jam|Efisiensi respons|Flat Rate jika SLA<br>terpenuhi|
-|**Penalty**<br>**(Appeal)**|Potongan jika warga naik Appeal ke Camat<br>dan Lurah kalah banding|Mencegah Lurah semena-mena menolak<br>laporan valid|- RpY per kasus salah<br>tolak|
+|**Penalty**<br>**(Appeal)**|Potongan jika warga naik Appeal ke level birokrasi yang lebih tinggi<br>dan Admin kalah banding|Mencegah Admin semena-mena menolak<br>laporan valid|- RpY per kasus salah<br>tolak|
 
 
 ## **6. Data Strategy & Real-Time Approach**
@@ -102,6 +101,6 @@ $$ \text{Total Incentive} = \text{Pilar 1 (Data Integrity)} + \text{Pilar 2 (Ris
 
 1. **Baseline Historis:** Gunakan publikasi BPS DKI Jakarta (Statistik Kejahatan) dan data kemiskinan sebagai prior distribution.
 
-2. **Real-Time Synthetic:** Untuk demo hackathon, generate data menggunakan Python ( numpy.random.poisson ) berdasarkan lambda ($\lambda$) tiap kelurahan.
+2. **Real-Time Synthetic:** Generate data menggunakan Python ( numpy.random.poisson ) berdasarkan rata-rata tingkat kejadian kriminalitas ($\lambda$) tiap wilayah.
 
-3. **Credibility Blending:** Di pitch, jelaskan bahwa sistem bisa tetap jalan meski data real-time sepi, karena di-backup oleh model historis. Saat ada spike laporan Lurah, sistem merespons secara adaptif.
+3. **Credibility Blending:** Sistem bisa tetap jalan meski data real-time sepi, karena di-backup oleh model historis. Saat ada spike laporan Lurah, sistem merespons secara adaptif.
