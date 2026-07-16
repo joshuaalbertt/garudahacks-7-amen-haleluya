@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JAGA — Guard your ground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --hutan:#1B3A2D; --kabut:#EEF3EF; --sirine:#C4553A; --daun:#2E6B4F;
+  --tanah:#8B7355; --malam:#0F2118; --putih:#FAFCFB; --abu:#E2E9E3;
+  --teks2:#4A6356; --bg:#F2F6F2; --amber:#B8853C;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{display:none}
+html,body{height:100%}
+body{
+  font-family:'Space Grotesk',Arial,sans-serif;color:var(--hutan);
+  background:radial-gradient(1200px 800px at 50% 18%, #16382A, #0F2118);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:22px 12px;min-height:100vh;
+}
+button{font-family:'Space Grotesk',Arial,sans-serif}
+input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
+.hidden{display:none!important}
+.serif{font-family:'Source Serif 4',Georgia,serif;font-style:italic}
+
+/* ═══ PHONE FRAME ═══ */
+.phone{
+  width:min(430px,100vw);height:min(900px,calc(100dvh - 60px));min-height:560px;
+  background:var(--bg);border-radius:36px;position:relative;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 10px #0a1810, 0 0 0 11px rgba(255,255,255,.08);
+  display:flex;flex-direction:column;
+}
+@media (max-width:480px){
+  body{padding:0}
+  .phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none;min-height:100dvh}
+  .stage-caption{display:none}
+}
+.stage-caption{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:center}
+
+/* fake statusbar */
+.statusbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:14px 26px 4px;font-size:12px;font-weight:600;color:var(--hutan)}
+#scr-login .statusbar{color:rgba(255,255,255,.85)}
+
+/* ═══ LOGIN ═══ */
+#scr-login{
+  position:absolute;inset:0;z-index:60;background:var(--hutan);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.kawung{position:absolute;inset:0;opacity:.06;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cellipse cx='15' cy='15' rx='9' ry='5' transform='rotate(45 15 15)'/%3E%3Cellipse cx='45' cy='15' rx='9' ry='5' transform='rotate(-45 45 15)'/%3E%3Cellipse cx='15' cy='45' rx='9' ry='5' transform='rotate(-45 15 45)'/%3E%3Cellipse cx='45' cy='45' rx='9' ry='5' transform='rotate(45 45 45)'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:60px 60px}
+.login-inner{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 30px 30px;gap:0}
+.login-eyebrow{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--sirine);margin:26px 0 10px}
+.login-head{font-size:31px;font-weight:700;color:#fff;line-height:1.14;letter-spacing:-1px}
+.login-head em{font-style:normal;color:#E07B5F}
+.login-sub{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:14px;color:rgba(255,255,255,.55);line-height:1.65;margin-top:12px;max-width:300px}
+.btn-google{
+  margin-top:34px;width:100%;display:flex;align-items:center;justify-content:center;gap:11px;
+  background:#fff;border:none;border-radius:12px;padding:15px;cursor:pointer;
+  font-size:14.5px;font-weight:600;color:#1f1f1f;box-shadow:0 6px 20px rgba(0,0,0,.25);
+  transition:transform .12s ease;
+}
+.btn-google:active{transform:scale(.98)}
+.login-note{margin-top:14px;text-align:center;font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.login-foot{position:relative;padding:0 30px 26px;display:flex;justify-content:space-between;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.25)}
+
+/* ═══ APP LAYOUT ═══ */
+#scr-app{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.hdr{flex-shrink:0;padding:8px 18px 10px;position:relative;z-index:45;background:var(--bg)}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;position:relative;height:40px}
+.hdr-brand{display:flex;align-items:center;gap:8px;z-index:2}
+.hdr-brand b{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.loc-pill{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--abu);
+  border-radius:18px;padding:7px 13px;max-width:172px;white-space:nowrap;
+}
+.loc-pill span{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.loc-pill small{font-size:8px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--tanah)}
+.loc-pill .loc-txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25;overflow:hidden}
+.btn-bell{position:relative;width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid var(--abu);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.bell-dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--sirine);border:1.5px solid #fff}
+
+.content{flex:1;position:relative;overflow:hidden}
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:6px 16px 118px;display:flex;flex-direction:column;gap:15px}
+.view-map{padding:0;overflow:hidden}
+
+/* cards */
+.card{background:#fff;border:1px solid var(--abu);border-radius:16px;box-shadow:0 1px 3px rgba(27,58,45,.04)}
+.card-dark{background:var(--hutan);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;color:#fff}
+.card-dark .kawung{opacity:.05}
+.lbl{font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--tanah)}
+.lbl-w{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.h-view{font-size:19px;font-weight:700;letter-spacing:-.4px}
+.sub-view{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:12.5px;color:var(--tanah);margin-top:2px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;border-radius:11px;padding:3px 9px;border:1px solid}
+.pill i{width:5px;height:5px;border-radius:50%;font-style:normal}
+.pill-green{color:var(--daun);background:rgba(46,107,79,.07);border-color:rgba(46,107,79,.22)}
+.pill-green i{background:var(--daun)}
+.pill-amber{color:var(--amber);background:rgba(200,155,60,.09);border-color:rgba(200,155,60,.3)}
+.pill-amber i{background:var(--amber)}
+.pill-red{color:var(--sirine);background:rgba(196,85,58,.08);border-color:rgba(196,85,58,.28)}
+.pill-red i{background:var(--sirine)}
+.pill-grey{color:var(--tanah);background:rgba(139,115,85,.08);border-color:rgba(139,115,85,.28)}
+.pill-grey i{background:var(--tanah)}
+
+.hexnum{clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--hutan);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0}
+
+.btn{border:none;border-radius:11px;padding:14px 18px;font-size:13.5px;font-weight:600;cursor:pointer;letter-spacing:.2px;transition:filter .15s,transform .1s}
+.btn:active{transform:scale(.985)}
+.btn-p{background:var(--sirine);color:#fff}
+.btn-p:hover{filter:brightness(.94)}
+.btn-dark{background:var(--hutan);color:#fff}
+.btn-dark:hover{background:var(--daun)}
+.btn-o{background:transparent;color:var(--hutan);border:1.5px solid var(--abu)}
+.btn-o:hover{background:var(--bg)}
+.btn[disabled]{background:#CBBDB6!important;cursor:not-allowed;transform:none}
+
+/* verify banner */
+.vbanner{display:flex;gap:12px;align-items:center;background:rgba(200,155,60,.08);border:1px solid rgba(200,155,60,.35);border-radius:14px;padding:12px 14px}
+.vbanner .t{font-size:12.5px;font-weight:600}
+.vbanner .s{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:11.5px;color:var(--teks2);line-height:1.45;margin-top:1px}
+.vbanner button{flex-shrink:0;background:var(--amber);color:#fff;border:none;border-radius:9px;padding:9px 13px;font-size:11px;font-weight:600;cursor:pointer}
+
+/* maps */
+.mapbox{position:relative;height:290px;border-top:1px solid var(--kabut)}
+.mapel{position:absolute;inset:0;z-index:1;background:#E9EEE9}
+.leaflet-container{background:#E9EEE9;font-family:'Space Grotesk',Arial,sans-serif}
+.map-ctl{display:flex;flex-direction:column;gap:6px}
+.map-btn{width:33px;height:33px;border-radius:10px;background:#fff;border:1px solid var(--abu);box-shadow:0 2px 7px rgba(15,33,24,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;font-weight:600;color:var(--hutan);user-select:none}
+.map-btn:hover{background:var(--bg)}
+.legend{display:flex;gap:5px;pointer-events:none}
+.legend>div{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border:1px solid var(--abu);border-radius:13px;padding:4px 9px}
+.legend i{width:7px;height:7px;border-radius:50%;font-style:normal}
+.legend b{font-size:8.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--hutan)}
+.attrib{font-size:7.5px;color:var(--tanah);background:rgba(255,255,255,.85);border-radius:6px;padding:2px 6px;pointer-events:none}
+.out-overlay{position:absolute;inset:0;z-index:600;background:rgba(15,33,24,.55);display:flex;align-items:center;justify-content:center;padding:26px}
+.out-card{background:#fff;border-radius:15px;padding:20px 22px;text-align:center;max-width:260px;animation:up .25s ease}
+.chip-filter{pointer-events:auto;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;padding:8px 13px;border-radius:16px;cursor:pointer;border:1px solid var(--abu);background:rgba(255,255,255,.97);color:var(--teks2);box-shadow:0 2px 6px rgba(15,33,24,.08)}
+.chip-filter.on{background:var(--hutan);color:#fff;border-color:var(--hutan)}
+.map-fallback{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--kabut);text-align:center;padding:24px}
+
+/* zone score chip on map */
+.zchip{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translateY(-4px)}
+.zchip .n{font-size:13.5px;font-weight:700;color:#fff;border:2px solid #fff;border-radius:15px;padding:1px 9px;box-shadow:0 2px 6px rgba(15,33,24,.28);line-height:1.5}
+.zchip .k{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--hutan);background:rgba(255,255,255,.9);border-radius:7px;padding:1px 6px;white-space:nowrap}
+
+/* notif panel */
+#notif-panel{position:absolute;top:58px;left:14px;right:14px;z-index:48;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(15,33,24,.35);overflow:hidden;animation:up .22s ease}
+#notif-panel .nh{padding:14px 18px 10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--tanah);border-bottom:1px solid var(--kabut)}
+.nrow{display:flex;gap:11px;padding:13px 18px;border-bottom:1px solid var(--bg);align-items:flex-start}
+.nrow:last-child{border-bottom:none}
+.nrow .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.nrow .t{font-size:13px;font-weight:600}
+.nrow .b{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:12px;color:var(--teks2);line-height:1.5;margin-top:1px}
+.nrow .tm{font-size:9.5px;color:var(--tanah);flex-shrink:0}
+.scrim{position:absolute;inset:0;background:rgba(15,33,24,.35);z-index:46}
+
+/* tabbar */
+.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:44;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border-top:1px solid var(--abu);display:flex;align-items:flex-end;justify-content:space-around;padding:8px 8px 22px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;width:60px;padding-top:6px}
+.tab span{font-size:8.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#9AA89D}
+.tab.on span{color:var(--hutan)}
+.tab-lapor{margin-top:-22px;width:64px}
+.tab-lapor .hexbtn{width:50px;height:54px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--sirine);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(196,85,58,.35)}
+
+/* forms */
+.inp{width:100%;border:1.5px solid var(--abu);border-radius:11px;background:#fff;padding:13px 15px;font-size:14px;color:var(--hutan);outline:none}
+.inp:focus{border-color:var(--daun)}
+.inp-err{border-color:var(--sirine)!important}
+.err-msg{font-size:11px;color:var(--sirine);font-weight:500;margin-top:6px}
+textarea.inp{min-height:92px;resize:none;font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:13.5px;line-height:1.6}
+.cat{padding:13px 15px;border-radius:11px;cursor:pointer;background:#fff;border:1.5px solid var(--abu);display:flex;align-items:center;gap:9px}
+.cat i{width:9px;height:10px;flex-shrink:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#D4DDD6;font-style:normal}
+.cat b{font-size:12.5px;font-weight:600;color:var(--hutan)}
+.cat.on{background:var(--hutan);border-color:var(--hutan)}
+.cat.on i{background:var(--sirine)}
+.cat.on b{color:#fff}
+
+/* modals */
+.modal{position:absolute;inset:0;z-index:80;background:rgba(15,33,24,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .18s ease}
+.modal.center{align-items:center;padding:26px}
+.mcard{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:20px 20px 30px;animation:up .26s ease;max-height:82%;overflow-y:auto}
+.modal.center .mcard{border-radius:18px;padding:20px;max-width:340px}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.mtitle{font-size:16.5px;font-weight:700;letter-spacing:-.3px}
+.msub{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:12.5px;color:var(--teks2);line-height:1.55;margin-top:3px}
+.mclose{width:28px;height:28px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.mclose:hover{background:var(--abu)}
+
+/* account rows (google) */
+.acc{display:flex;align-items:center;gap:13px;padding:13px 10px;border-radius:12px;cursor:pointer}
+.acc:hover{background:var(--bg)}
+.acc .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.acc .nm{font-size:13.5px;font-weight:600;color:#1f1f1f}
+.acc .em{font-size:11.5px;color:#5f6368;margin-top:1px}
+
+/* payment rows */
+.payrow{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--bg)}
+.payrow:last-child{border-bottom:none}
+.paylogo{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.payrow .pn{font-size:13.5px;font-weight:600}
+.payrow .ps{font-size:10.5px;color:var(--tanah);margin-top:1px}
+.paylink{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--daun);cursor:pointer;padding:8px 4px;flex-shrink:0}
+.paylink.red{color:var(--sirine)}
+
+/* method select (proteksi) */
+.mth{display:flex;align-items:center;gap:11px;padding:12px 14px;border:1.5px solid var(--abu);border-radius:12px;cursor:pointer;background:#fff}
+.mth.on{border-color:var(--hutan);background:rgba(27,58,45,.04)}
+.mth .radio{width:17px;height:17px;border-radius:50%;border:2px solid var(--abu);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.mth.on .radio{border-color:var(--hutan)}
+.mth.on .radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--hutan)}
+
+/* spinner */
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--kabut);border-top-color:var(--daun);animation:rot .8s linear infinite;margin:0 auto}
+.spin.big{width:34px;height:34px}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(196,85,58,.45)}70%{box-shadow:0 0 0 9px rgba(196,85,58,0)}}
+
+/* toasts */
+#toasts{position:absolute;top:54px;left:16px;right:16px;z-index:95;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--malam);color:#fff;border-radius:12px;padding:11px 15px;font-size:12.5px;font-weight:500;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(15,33,24,.4);animation:up .25s ease;pointer-events:auto}
+.toast i{width:8px;height:8px;border-radius:50%;flex-shrink:0;font-style:normal}
+#payout-toast{position:absolute;left:12px;right:12px;bottom:96px;z-index:75;background:var(--malam);border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;box-shadow:0 14px 36px rgba(15,33,24,.4);animation:up .3s ease}
+#payout-toast .pd{width:9px;height:9px;border-radius:50%;background:var(--sirine);flex-shrink:0;animation:pulse 2s infinite}
+
+/* zone sheet */
+#sheet-zone{position:absolute;left:10px;right:10px;bottom:96px;z-index:50;background:#fff;border:1px solid var(--abu);border-radius:18px;box-shadow:0 16px 44px rgba(15,33,24,.25);padding:17px 19px;animation:up .25s ease}
+
+/* pipeline */
+.pl-row{display:flex;gap:12px;align-items:flex-start}
+.pl-dotcol{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.pl-dot{width:12px;height:12px;border-radius:50%;border:2px solid}
+.pl-line{width:2px;height:26px;background:var(--kabut)}
+.pl-t{font-size:12.5px;font-weight:600}
+.pl-s{font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:1px}
+
+/* settings */
+.setrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--bg);cursor:pointer}
+.setrow:last-child{border-bottom:none}
+.setrow i{width:9px;height:10px;flex-shrink:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);font-style:normal}
+.setrow b{flex:1;font-size:13.5px;font-weight:500}
+
+.qr-wrap{width:196px;height:196px;margin:14px auto;border:1.5px solid var(--abu);border-radius:14px;padding:12px;background:#fff}
+.demo-tag{display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--amber);background:rgba(200,155,60,.12);border:1px solid rgba(200,155,60,.3);border-radius:8px;padding:2px 8px}
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- ═══════════ APP ═══════════ -->
+  <section id="scr-app" class="hidden">
+    <div class="statusbar"><span id="sb-time">09:41</span><span style="letter-spacing:2px">●●● ⌁ ▮</span></div>
+
+    <!-- header -->
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-brand">
+          <svg width="27" height="27" viewBox="0 0 52 52" fill="none"><polygon points="26,4 46,15 46,37 26,48 6,37 6,15" fill="#1B3A2D"/><ellipse cx="26" cy="18" rx="5" ry="3" fill="rgba(255,255,255,.6)"/><ellipse cx="34" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.6)" transform="rotate(90 34 26)"/><ellipse cx="26" cy="34" rx="5" ry="3" fill="rgba(255,255,255,.6)"/><ellipse cx="18" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.6)" transform="rotate(90 18 26)"/><circle cx="26" cy="26" r="4" fill="#C4553A"/><circle cx="26" cy="26" r="1.5" fill="#fff" opacity=".9"/></svg>
+          <b>JAGA</b>
+        </div>
+        <div class="loc-pill" title="Lokasi terdeteksi via GPS">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="10" r="3" fill="#C4553A"/><path d="M12 21c4-4.5 7-7.8 7-11a7 7 0 1 0-14 0c0 3.2 3 6.5 7 11Z" stroke="#1B3A2D" stroke-width="1.8"/></svg>
+          <span class="loc-txt"><span>Kel. Menteng</span><small>Jakarta Pusat</small></span>
+        </div>
+        <div class="btn-bell" onclick="A.toggleNotif()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z" stroke="#1B3A2D" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="#1B3A2D" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="bell-dot" id="bell-dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- notif -->
+    <div id="notif-scrim" class="scrim hidden" onclick="A.toggleNotif()"></div>
+    <div id="notif-panel" class="hidden">
+      <div class="nh">Notifikasi</div>
+      <div id="notif-list"></div>
+    </div>
+
+    <!-- content -->
+    <div class="content">
+
+      <!-- BERANDA -->
+      <div id="view-beranda" class="view">
+        <div>
+          <div class="serif" id="home-greet" style="font-size:22px">Selamat sore.</div>
+          <div class="lbl" id="home-date" style="margin-top:3px"></div>
+        </div>
+
+        <div id="home-vbanner"></div>
+
+        <div class="card-dark">
+          <div class="kawung"></div>
+          <div style="position:relative">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between">
+              <div>
+                <div class="lbl-w">Risk score · Kel. Menteng</div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-top:8px">
+                  <span style="font-size:52px;font-weight:700;color:#E07B5F;letter-spacing:-3px;line-height:.9">78</span>
+                  <span style="font-size:13px;color:rgba(255,255,255,.35)">/100</span>
+                </div>
+                <div class="serif" style="font-size:12.5px;color:rgba(255,255,255,.55);margin-top:7px">Risiko tinggi — threshold hampir tercapai.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">
+                <div id="home-bars" style="display:flex;align-items:flex-end;gap:3px;height:42px"></div>
+                <div style="font-size:8.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.3)">12 jam terakhir</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;background:rgba(255,255,255,.07);border-radius:10px;padding:10px 14px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5)">Threshold parametrik</span>
+                <span style="font-size:10.5px;font-weight:600;color:#E07B5F" id="home-thresh-n">4/5 valid</span>
+              </div>
+              <div style="height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden"><div id="home-thresh-bar" style="height:100%;background:#E07B5F;width:80%;transition:width .4s"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px">
+            <div>
+              <div style="font-size:14.5px;font-weight:600">Peta risiko</div>
+              <div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">Geser &amp; zoom · ketuk area untuk detail</div>
+            </div>
+            <div onclick="A.go('peta')" style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--daun);cursor:pointer;padding:7px 11px;border:1px solid var(--abu);border-radius:8px">Perbesar</div>
+          </div>
+          <div class="mapbox">
+            <div id="map-mini" class="mapel"></div>
+            <div class="map-ctl" style="position:absolute;right:10px;top:10px;z-index:610">
+              <div class="map-btn" onclick="A.zoom('mini',1)">+</div>
+              <div class="map-btn" onclick="A.zoom('mini',-1)">−</div>
+            </div>
+            <div class="legend" style="position:absolute;left:10px;bottom:10px;z-index:605">
+              <div><i style="background:#C4553A"></i><b>Tinggi</b></div>
+              <div><i style="background:#B8853C"></i><b>Sedang</b></div>
+              <div><i style="background:#2E6B4F"></i><b>Rendah</b></div>
+            </div>
+            <div class="attrib" style="position:absolute;right:10px;bottom:10px;z-index:605">© OpenStreetMap · CARTO</div>
+            <div id="out-mini" class="out-overlay hidden">
+              <div class="out-card">
+                <div class="hexnum" style="width:38px;height:42px;margin:0 auto 10px;background:var(--sirine);font-size:17px">!</div>
+                <div style="font-size:14px;font-weight:700;letter-spacing:-.2px">Anda di luar jangkauan</div>
+                <div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.55;margin:6px 0 13px">Data risiko JAGA baru tersedia untuk Jakarta Pusat (pilot).</div>
+                <button class="btn btn-dark" style="padding:10px 18px;font-size:12px" onclick="A.recenter('mini')">Kembali ke area</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="home-protect"></div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 10px">
+            <span style="font-size:14.5px;font-weight:600">Laporan terverifikasi</span>
+            <span style="font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--tanah)">Hari ini</span>
+          </div>
+          <div id="home-feed" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- PETA -->
+      <div id="view-peta" class="view view-map hidden">
+        <div style="position:relative;height:100%">
+          <div id="map-full" class="mapel"></div>
+          <div id="chips-filter" style="position:absolute;left:0;right:0;top:0;z-index:610;display:flex;gap:6px;padding:10px 16px;pointer-events:none"></div>
+          <div class="map-ctl" style="position:absolute;right:12px;top:60px;z-index:610">
+            <div class="map-btn" onclick="A.zoom('full',1)">+</div>
+            <div class="map-btn" onclick="A.zoom('full',-1)">−</div>
+            <div class="map-btn" onclick="A.recenter('full')" title="Kembali ke Jakarta Pusat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6.5" stroke="#1B3A2D" stroke-width="1.8"/><circle cx="12" cy="12" r="2" fill="#C4553A"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="#1B3A2D" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <div class="legend" style="position:absolute;left:12px;bottom:104px;z-index:605;flex-direction:column;gap:5px;align-items:flex-start">
+            <div><i style="background:#C4553A"></i><b>Tinggi &gt;60</b></div>
+            <div><i style="background:#B8853C"></i><b>Sedang 30–60</b></div>
+            <div><i style="background:#2E6B4F"></i><b>Rendah &lt;30</b></div>
+          </div>
+          <div class="attrib" style="position:absolute;right:12px;bottom:104px;z-index:605">© OpenStreetMap · CARTO</div>
+          <div id="out-full" class="out-overlay hidden">
+            <div class="out-card">
+              <div class="hexnum" style="width:44px;height:48px;margin:0 auto 12px;background:var(--sirine);font-size:19px">!</div>
+              <div style="font-size:15.5px;font-weight:700;letter-spacing:-.3px">Anda di luar jangkauan</div>
+              <div class="serif" style="font-size:12.5px;color:var(--teks2);line-height:1.6;margin:7px 0 15px">Data risiko JAGA baru tersedia untuk wilayah pilot Jakarta Pusat. Wilayah lain menyusul.</div>
+              <button class="btn btn-dark" style="width:100%;font-size:12.5px" onclick="A.recenter('full')">Kembali ke Jakarta Pusat</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAPOR -->
+      <div id="view-lapor" class="view hidden"></div>
+
+      <!-- PROTEKSI -->
+      <div id="view-proteksi" class="view hidden"></div>
+
+      <!-- PROFIL -->
+      <div id="view-profil" class="view hidden"></div>
+    </div>
+
+    <!-- zone sheet -->
+    <div id="sheet-zone" class="hidden"></div>
+
+    <!-- payout toast -->
+    <div id="payout-toast" class="hidden">
+      <div class="pd"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#fff">Payout terproses</div>
+        <div class="serif" id="payout-sub" style="font-size:11.5px;color:rgba(255,255,255,.5)"></div>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:#E07B5F;flex-shrink:0">Rp1,5jt</div>
+      <div onclick="A.hidePayoutToast()" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="rgba(255,255,255,.6)" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <!-- tabbar -->
+    <div class="tabbar">
+      <div class="tab" id="tab-beranda" onclick="A.go('beranda')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5h-5v5H4Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/></svg>
+        <span>Beranda</span>
+      </div>
+      <div class="tab" id="tab-peta" onclick="A.go('peta')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 5.5-9 5.5-9-5.5L12 3Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/><path d="M3.5 13.5 12 18.8l8.5-5.3" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Peta</span>
+      </div>
+      <div class="tab tab-lapor" id="tab-lapor" onclick="A.go('lapor')">
+        <div class="hexbtn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+        <span>Lapor</span>
+      </div>
+      <div class="tab" id="tab-proteksi" onclick="A.go('proteksi')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 2.8 20 7.3v9.4l-8 4.5-8-4.5V7.3L12 2.8Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4" class="tkf" fill="#9AA89D"/></svg>
+        <span>Proteksi</span>
+      </div>
+      <div class="tab" id="tab-profil" onclick="A.go('profil')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.6" class="tk" stroke="#9AA89D" stroke-width="1.9"/><path d="M4.5 20c1.2-3.4 4-5 7.5-5s6.3 1.6 7.5 5" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linecap="round"/></svg>
+        <span>Profil</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ LOGIN ═══════════ -->
+  <section id="scr-login">
+    <div class="kawung"></div>
+    <div class="statusbar"><span>09:41</span><span style="letter-spacing:2px">●●● ⌁ ▮</span></div>
+    <div class="login-inner">
+      <svg width="58" height="58" viewBox="0 0 52 52" fill="none"><polygon points="26,4 46,15 46,37 26,48 6,37 6,15" fill="#2E6B4F" stroke="rgba(255,255,255,.15)" stroke-width="1"/><ellipse cx="26" cy="18" rx="5" ry="3" fill="rgba(255,255,255,.5)"/><ellipse cx="34" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.5)" transform="rotate(90 34 26)"/><ellipse cx="26" cy="34" rx="5" ry="3" fill="rgba(255,255,255,.5)"/><ellipse cx="18" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.5)" transform="rotate(90 18 26)"/><circle cx="26" cy="26" r="4" fill="#C4553A"/><circle cx="26" cy="26" r="1.5" fill="#fff" opacity=".8"/></svg>
+      <div class="login-eyebrow">Jaga · Jakarta Pusat Pilot</div>
+      <div class="login-head">Risiko dipetakan.<br>Hidup <em>dilindungi.</em></div>
+      <div class="login-sub">Prediksi risiko, pelaporan terverifikasi Lurah, dan proteksi mikro parametrik untuk keluarga Jakarta.</div>
+      <button class="btn-google" onclick="A.openAccounts()">
+        <svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Masuk dengan Google
+      </button>
+      <div class="login-note">Demo tanpa backend · login simulasi</div>
+    </div>
+    <div class="login-foot"><span>Guard your ground.</span><span>v1.0 · 2026</span></div>
+  </section>
+
+  <!-- ═══════════ MODALS (dinamis) ═══════════ -->
+  <div id="modal-root"></div>
+
+  <!-- toasts -->
+  <div id="toasts"></div>
+</div>
+
+<div class="stage-caption">JAGA · Prototipe interaktif — semua data &amp; pembayaran simulasi</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+/* ═══════════════════ util ═══════════════════ */
+const $  = (s,el)=> (el||document).querySelector(s);
+const $$ = (s,el)=> Array.from((el||document).querySelectorAll(s));
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nowHM = ()=>{ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+const maskPhone = p => p ? p.slice(0,4)+'••••'+p.slice(-2) : '';
+const maskNik   = n => n ? n.slice(0,4)+'••••••••'+n.slice(-4) : '';
+
+/* ═══════════════════ state ═══════════════════ */
+const KEY='jaga_demo_v3';
+function fresh(){
+  return {
+    user:null,                       // {name,email}
+    verified:false, nik:null,
+    wallets:{gopay:null, shopeepay:null},   // nomor HP
+    payoutDest:null,                 // 'gopay' | 'shopeepay'
+    protection:null,                 // {active,method,since,policy}
+    thresh:4,                        // laporan valid menuju trigger (dari 5)
+    reportsSubmitted:0, reportsVerified:0,
+    myFeed:[], payoutHistory:[],
+    unread:true,
+    notifs:[
+      {dot:'#C4553A', title:'Risk score naik 18 poin', body:'Kel. Menteng — 4 laporan valid. Threshold hampir terlampaui.', time:'14:32'},
+      {dot:'#2E6B4F', title:'Verifikasi Lurah lebih cepat', body:'Rata-rata verifikasi laporan di Menteng kini 2 menit.', time:'13:05'},
+      {dot:'#8B7355', title:'Selamat datang di JAGA', body:'Aktifkan proteksi mikro untuk payout otomatis tanpa klaim.', time:'09:00'},
+    ],
+  };
+}
+let S;
+try{ const r=localStorage.getItem(KEY); S = r ? Object.assign(fresh(), JSON.parse(r)) : fresh(); }
+catch(e){ S = fresh(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ui-only state (tidak dipersist) */
+const U = { tab:'beranda', filter:'semua', selId:null, notifOpen:false,
+            laporCat:null, laporText:'', laporLoc:'Menteng', laporSent:false, laporStage:1,
+            paySel:null, pending:null, timers:[] };
+function timer(fn,ms){ const t=setTimeout(()=>{ U.timers=U.timers.filter(x=>x!==t); fn(); },ms); U.timers.push(t); return t; }
+function clearTimers(){ U.timers.forEach(clearTimeout); U.timers=[]; }
+
+/* ═══════════════════ data ═══════════════════ */
+const Z = [
+  ['Menteng',78,-6.1956,106.8322],['Gondangdia',44,-6.1862,106.8330],['Cikini',62,-6.1938,106.8402],
+  ['Kebon Sirih',35,-6.1828,106.8258],['Pegangsaan',28,-6.1995,106.8442],['Senen',71,-6.1768,106.8422],
+  ['Kwitang',55,-6.1812,106.8372],['Kenari',18,-6.1902,106.8492],['Paseban',40,-6.1972,106.8532],
+  ['Kramat',51,-6.1868,106.8468],['Bungur',24,-6.1688,106.8478],['Johar Baru',66,-6.1815,106.8562],
+  ['Galur',58,-6.1692,106.8592],['Tanah Tinggi',74,-6.1732,106.8522],['Kampung Rawa',47,-6.1762,106.8602],
+  ['Gambir',21,-6.1762,106.8192],['Cideng',31,-6.1752,106.8102],['Petojo Utara',52,-6.1662,106.8142],
+  ['Duri Pulo',36,-6.1702,106.8062],['Kebon Melati',39,-6.1932,106.8142],
+];
+const CENTER=[-6.1880,106.8340];
+const PILOT ={s:-6.238,w:106.772,n:-6.128,e:106.908};       // batas area pilot
+const HARD  ={s:-6.42, w:106.55, n:-5.95, e:107.12};        // batas geser maksimum
+const PM = {
+  gopay:    {name:'GoPay',     color:'#00AED6', desc:'E-wallet · payout & premi'},
+  shopeepay:{name:'ShopeePay', color:'#EE4D2D', desc:'E-wallet · payout & premi'},
+  qris:     {name:'QRIS',      color:'#1B3A2D', desc:'Bayar premi via scan QR'},
+  card:     {name:'Kartu debit/kredit', color:'#4A6356', desc:'Via JagaPay Gateway (simulasi)'},
+};
+const band = s => s>60 ? {c:'#C4553A',status:'Risiko tinggi',pill:'pill-red'}
+             : s>=30   ? {c:'#B8853C',status:'Risiko sedang',pill:'pill-amber'}
+             :           {c:'#2E6B4F',status:'Risiko rendah',pill:'pill-green'};
+const FEED0 = [
+  {dot:'#C4553A', title:'Pencurian motor · Jl. Cilacap', body:'Dua saksi. CCTV warga tersedia. Masuk Risk Engine 14:34.', status:'Terverifikasi Lurah', pill:'pill-green', time:'14:32'},
+  {dot:'#B8853C', title:'Penjambretan · Taman Suropati', body:'Satu pelapor. Menunggu konfirmasi saksi kedua.', status:'Menunggu review', pill:'pill-amber', time:'13:58'},
+  {dot:'#8B7355', title:'Orang mencurigakan · Jl. HOS Cokroaminoto', body:'Sinyal mentah — belum memenuhi syarat verifikasi.', status:'Sinyal mentah', pill:'pill-grey', time:'13:21'},
+];
+
+/* ═══════════════════ toast & notif ═══════════════════ */
+function toast(msg, color){
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML='<i style="background:'+(color||'#2E6B4F')+'"></i><span>'+esc(msg)+'</span>';
+  $('#toasts').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }, 3200);
+}
+function pushNotif(dot,title,body){
+  S.notifs.unshift({dot,title,body,time:nowHM()});
+  S.notifs=S.notifs.slice(0,8); S.unread=true; save();
+  renderNotifs(); $('#bell-dot').classList.remove('hidden');
+}
+function renderNotifs(){
+  $('#notif-list').innerHTML = S.notifs.map(n=>
+    '<div class="nrow"><div class="dot" style="background:'+n.dot+'"></div>'+
+    '<div style="flex:1;min-width:0"><div class="t">'+esc(n.title)+'</div><div class="b">'+esc(n.body)+'</div></div>'+
+    '<div class="tm">'+esc(n.time)+'</div></div>').join('');
+}
+
+/* ═══════════════════ modal system ═══════════════════ */
+function openModal(html, center){
+  closeModal();
+  const m=document.createElement('div');
+  m.className='modal'+(center?' center':''); m.id='modal-live';
+  m.innerHTML='<div class="mcard">'+html+'</div>';
+  m.addEventListener('click', e=>{ if(e.target===m) closeModal(); });
+  $('#modal-root').appendChild(m);
+}
+function closeModal(){ const m=$('#modal-live'); if(m) m.remove(); }
+const closeX='<div class="mclose" onclick="A.closeModal()"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="#4A6356" stroke-width="1.8" stroke-linecap="round"/></svg></div>';
+
+/* ═══════════════════ maps ═══════════════════ */
+const maps={mini:null, full:null};
+function leafletReady(cb){
+  if(window.L) return cb();
+  let n=0;
+  const t=setInterval(()=>{ n++;
+    if(window.L){ clearInterval(t); cb(); }
+    else if(n>50){ clearInterval(t); mapFallback(); }
+  },100);
+}
+function mapFallback(){
+  ['map-mini','map-full'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='<div class="map-fallback"><b style="font-size:13px">Peta tidak dapat dimuat</b><span class="serif" style="font-size:12px;color:var(--teks2)">Periksa koneksi internet lalu muat ulang halaman.</span></div>';
+  });
+}
+function initMap(kind){
+  if(maps[kind] || !window.L) return;
+  const el = document.getElementById(kind==='mini'?'map-mini':'map-full');
+  if(!el || !el.isConnected || el.clientHeight===0) return;
+  const map = L.map(el,{
+    zoomControl:false, attributionControl:false,
+    center:CENTER, zoom: kind==='mini'?13:13.5,
+    minZoom:11.5, maxZoom:17, zoomSnap:.5,
+    scrollWheelZoom: kind==='full',
+    maxBounds: L.latLngBounds([HARD.s,HARD.w],[HARD.n,HARD.e]),
+    maxBoundsViscosity: .7,
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(map);
+  map._zones = buildZones(map, kind);
+  map.on('moveend', ()=>{
+    if(!map._container.isConnected) return;
+    const out = !L.latLngBounds([PILOT.s,PILOT.w],[PILOT.n,PILOT.e]).contains(map.getCenter());
+    const ov = document.getElementById(kind==='mini'?'out-mini':'out-full');
+    if(ov) ov.classList.toggle('hidden', !out);
+  });
+  maps[kind]=map;
+  setTimeout(()=>{ try{ map.invalidateSize(); }catch(e){} }, 60);
+  if(window.ResizeObserver){
+    new ResizeObserver(()=>{ try{ map.invalidateSize(); }catch(e){} }).observe(el);
+  }
+}
+function buildZones(map, kind){
+  const g = L.layerGroup();
+  Z.forEach((z,i)=>{
+    const score=z[1], b=band(score);
+    const cat = score>60?'tinggi':score>=30?'sedang':'rendah';
+    const dim = kind==='full' && U.filter!=='semua' && U.filter!==cat;
+    const sel = kind==='full' && U.selId===i;
+    const op  = dim?0.08:1;
+    L.circle([z[2],z[3]],{
+      radius:380, color:sel?'#1B3A2D':b.c, weight:sel?3:1.5,
+      opacity:.85*op, fillColor:b.c, fillOpacity:(sel?.42:.22)*op,
+    }).on('click', ()=>{ if(!dim) A.tapZone(i, kind); }).addTo(g);
+    if(!dim){
+      const html='<div class="zchip"><div class="n" style="background:'+(sel?'#1B3A2D':b.c)+'">'+score+'</div>'+
+        (kind==='full'||score>60 ? '<div class="k">'+esc(z[0])+'</div>' : '')+'</div>';
+      L.marker([z[2],z[3]],{icon:L.divIcon({className:'',html,iconSize:[10,10],iconAnchor:[5,5]}),interactive:false}).addTo(g);
+    }
+  });
+  g.addTo(map);
+  return g;
+}
+function refreshZones(){
+  Object.entries(maps).forEach(([kind,map])=>{
+    if(!map || !map._container.isConnected) return;
+    if(map._zones) map.removeLayer(map._zones);
+    map._zones = buildZones(map, kind);
+  });
+}
+
+/* ═══════════════════ render: header/tab/views ═══════════════════ */
+function setTabIcons(){
+  ['beranda','peta','lapor','proteksi','profil'].forEach(t=>{
+    const el=$('#tab-'+t), on=U.tab===t;
+    el.classList.toggle('on',on);
+    $$('.tk',el).forEach(p=>p.setAttribute('stroke', on?'#1B3A2D':'#9AA89D'));
+    $$('.tkf',el).forEach(p=>p.setAttribute('fill', on?'#1B3A2D':'#9AA89D'));
+    if(t==='lapor') $('span',el).style.color = on?'#C4553A':'';
+  });
+}
+function renderHome(){
+  const h=new Date().getHours();
+  const g = h<11?'pagi':h<15?'siang':h<19?'sore':'malam';
+  const first = S.user ? S.user.name.split(' ')[0] : '';
+  $('#home-greet').textContent='Selamat '+g+(first?', '+first+'.':'.');
+  $('#home-date').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})+' · Jakarta Pusat';
+  // trend bars
+  const bars=[10,9,12,14,13,18,21,20,27,31,35,40];
+  $('#home-bars').innerHTML = bars.map((b,i)=>'<div style="width:6px;border-radius:2px;height:'+b+'px;background:'+(i===bars.length-1?'#C4553A':'rgba(255,255,255,.'+(12+i*2)+')')+'"></div>').join('');
+  // threshold
+  $('#home-thresh-n').textContent = S.thresh+'/5 valid';
+  $('#home-thresh-bar').style.width = (S.thresh/5*100)+'%';
+  // banner verifikasi
+  $('#home-vbanner').innerHTML = (S.user && !S.verified) ?
+    '<div class="vbanner"><div style="flex:1;min-width:0"><div class="t">Akun belum terverifikasi</div>'+
+    '<div class="s">Verifikasi NIK untuk membuka Lapor, Proteksi &amp; payout.</div></div>'+
+    '<button onclick="A.openNik()">Verifikasi NIK</button></div>' : '';
+  // kartu proteksi
+  const p=S.protection;
+  $('#home-protect').innerHTML = p && p.active ?
+    '<div class="card" style="padding:15px 17px;display:flex;align-items:center;gap:13px;cursor:pointer" onclick="A.go(\'proteksi\')">'+
+      '<div class="hexnum" style="width:40px;height:44px"><span style="width:10px;height:10px;border-radius:50%;background:#C4553A;border:2px solid rgba(255,255,255,.75)"></span></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600">Proteksi mikro aktif</div>'+
+      '<div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">Rp15.000/bln · payout otomatis Rp1,5jt</div></div>'+
+      '<span class="pill pill-green"><i></i>Aktif</span></div>'
+    :
+    '<div class="card" style="padding:15px 17px;display:flex;align-items:center;gap:13px;cursor:pointer" onclick="A.go(\'proteksi\')">'+
+      '<div class="hexnum" style="width:40px;height:44px;background:#D4DDD6"><span style="width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid rgba(27,58,45,.3)"></span></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600">Proteksi mikro belum aktif</div>'+
+      '<div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">Mulai Rp15.000/bln — payout otomatis tanpa klaim</div></div>'+
+      '<span class="pill pill-grey"><i></i>Nonaktif</span></div>';
+  // feed
+  const feed=[...S.myFeed, ...FEED0];
+  $('#home-feed').innerHTML = feed.map(f=>
+    '<div class="card" style="border-radius:14px;padding:13px 15px;display:flex;gap:12px;align-items:flex-start">'+
+    '<div style="width:8px;height:8px;border-radius:50%;background:'+f.dot+';margin-top:5px;flex-shrink:0"></div>'+
+    '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+esc(f.title)+'</div>'+
+    '<div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.5;margin-top:1px">'+esc(f.body)+'</div>'+
+    '<div style="display:flex;align-items:center;gap:7px;margin-top:8px">'+
+    '<span class="pill '+f.pill+'"><i></i>'+esc(f.status)+'</span>'+
+    '<span style="font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah)">'+esc(f.time)+' WIB</span>'+
+    '</div></div></div>').join('');
+}
+function renderChips(){
+  const defs=[['semua','Semua'],['tinggi','Tinggi'],['sedang','Sedang'],['rendah','Rendah']];
+  $('#chips-filter').innerHTML = defs.map(([k,l])=>
+    '<div class="chip-filter'+(U.filter===k?' on':'')+'" onclick="A.setFilter(\''+k+'\')">'+l+'</div>').join('');
+}
+function renderZoneSheet(){
+  const sh=$('#sheet-zone');
+  if(U.selId==null || (U.tab!=='peta' && U.tab!=='beranda')){ sh.classList.add('hidden'); return; }
+  const z=Z[U.selId], b=band(z[1]);
+  const reports=Math.min(5, Math.round(z[1]/16));
+  const trend = z[1]>60 ? 'Naik '+Math.round(z[1]/4)+' poin dalam 6 jam terakhir. Verifikasi Lurah dibutuhkan sebelum trigger aktif.'
+    : z[1]>=30 ? 'Stabil dalam 6 jam terakhir. Pantau perkembangan sinyal mentah.'
+    : 'Turun dalam 6 jam terakhir. Kondisi wilayah kondusif.';
+  sh.innerHTML =
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">'+
+      '<div><div class="lbl" style="margin-bottom:3px">Kelurahan</div>'+
+      '<div style="font-size:17px;font-weight:700;letter-spacing:-.3px">'+esc(z[0])+'</div></div>'+
+      '<div class="mclose" onclick="A.closeZone()"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="#4A6356" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>'+
+    '<div style="display:flex;align-items:center;gap:18px;margin-bottom:13px">'+
+      '<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:40px;font-weight:700;color:'+b.c+';letter-spacing:-2px;line-height:1">'+z[1]+'</span><span style="font-size:12px;color:var(--tanah)">/100</span></div>'+
+      '<div style="flex:1"><span class="pill '+b.pill+'" style="margin-bottom:6px"><i></i>'+b.status+'</span>'+
+      '<div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.5">'+trend+'</div></div></div>'+
+    '<div style="background:var(--bg);border-radius:10px;padding:10px 14px;margin-bottom:13px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--teks2)">Threshold parametrik</span>'+
+      '<span style="font-size:10.5px;font-weight:600;color:'+b.c+'">'+reports+'/5 laporan</span></div>'+
+      '<div style="height:4px;border-radius:2px;background:var(--abu);overflow:hidden"><div style="height:100%;background:'+b.c+';width:'+(reports/5*100)+'%"></div></div></div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button class="btn btn-p" style="flex:1;font-size:12.5px;padding:12px" onclick="A.laporFrom(\''+esc(z[0])+'\')">Laporkan kejadian di sini</button>'+
+      '<button class="btn btn-o" style="font-size:12.5px;padding:12px 16px" onclick="A.closeZone()">Tutup</button></div>';
+  sh.classList.remove('hidden');
+}
+
+/* ── LAPOR ── */
+function renderLapor(){
+  const v=$('#view-lapor');
+  if(U.laporSent){
+    const st=U.laporStage; // 1 terkirim, 2 verifikasi berjalan, 3 selesai
+    const pl=[
+      {done:true,  title:'Laporan terkirim', sub:nowHM()+' WIB · lokasi & waktu terekam'},
+      {done:st>=3, act:st===2, title:'Verifikasi Lurah '+esc(U.laporLoc), sub: st>=3?'Terverifikasi · valid':'Sedang berlangsung · rata-rata 2 menit'},
+      {done:st>=3, title:'Masuk Risk Engine', sub: st>=3?'Risk score kelurahan diperbarui':'Menunggu verifikasi'},
+    ];
+    v.innerHTML =
+      '<div style="padding:26px 8px 0;display:flex;flex-direction:column;align-items:center;text-align:center">'+
+      '<div class="hexnum" style="width:72px;height:78px;background:'+(st>=3?'#2E6B4F':'#B8853C')+';margin-bottom:18px">'+
+        (st>=3?'<svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17.5 19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+              :'<svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="#fff" stroke-width="2"/><path d="M12 7.5V12l3 2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>')+'</div>'+
+      '<div style="font-size:20px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px">'+(st>=3?'Laporan terverifikasi.':'Laporan terkirim.')+'</div>'+
+      '<div class="serif" style="font-size:13.5px;color:var(--teks2);line-height:1.65;max-width:290px;margin-bottom:24px">'+
+        (st>=3?'Laporan Anda valid dan sudah masuk Risk Engine kelurahan '+esc(U.laporLoc)+'.'
+              :'Masuk antrean verifikasi Lurah '+esc(U.laporLoc)+'. Estimasi masuk Risk Engine: 2 menit setelah verifikasi.')+'</div>'+
+      '<div class="card" style="width:100%;max-width:320px;padding:18px;text-align:left;margin-bottom:22px">'+
+        pl.map((p,i)=>'<div class="pl-row"><div class="pl-dotcol">'+
+          '<div class="pl-dot" style="background:'+(p.done?'#2E6B4F':p.act?'#B8853C':'#D4DDD6')+';border-color:'+(p.done?'rgba(46,107,79,.3)':p.act?'rgba(200,155,60,.3)':'#EEF3EF')+'"></div>'+
+          (i<pl.length-1?'<div class="pl-line"></div>':'')+'</div>'+
+          '<div style="padding-bottom:8px"><div class="pl-t" style="color:'+(p.done||p.act?'var(--hutan)':'var(--tanah)')+'">'+p.title+'</div>'+
+          '<div class="pl-s">'+p.sub+'</div></div></div>').join('')+'</div>'+
+      '<button class="btn btn-dark" onclick="A.laporReset()">Buat laporan baru</button></div>';
+    return;
+  }
+  const cats=['Pencurian','Perampokan','Banjir','Kebakaran','Kecelakaan','Lainnya'];
+  v.innerHTML =
+    '<div><div class="h-view">Laporkan kejadian</div>'+
+    '<div class="sub-view">Diverifikasi Lurah sebelum masuk Risk Engine.</div></div>'+
+    (!S.verified ?
+      '<div class="vbanner"><div style="flex:1;min-width:0"><div class="t">Perlu verifikasi NIK</div>'+
+      '<div class="s">Isi laporan boleh sekarang — verifikasi diminta saat kirim.</div></div>'+
+      '<button onclick="A.openNik()">Verifikasi</button></div>' : '')+
+    '<div class="card" style="border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:11px">'+
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="10" r="3" fill="#C4553A"/><path d="M12 21c4-4.5 7-7.8 7-11a7 7 0 1 0-14 0c0 3.2 3 6.5 7 11Z" stroke="#1B3A2D" stroke-width="1.7"/></svg>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600">Kel. '+esc(U.laporLoc)+', Jakarta Pusat</div>'+
+      '<div style="font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:1px">GPS terdeteksi · akurat 12 m</div></div>'+
+      '<span onclick="A.openKelurahan()" style="font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--daun);cursor:pointer;padding:6px 2px">Ubah</span></div>'+
+    '<div><div class="lbl" style="margin-bottom:9px">Jenis kejadian</div>'+
+      '<div id="lapor-cats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+      cats.map(c=>'<div class="cat'+(U.laporCat===c?' on':'')+'" data-cat="'+c+'" onclick="A.pickCat(\''+c+'\')"><i></i><b>'+c+'</b></div>').join('')+'</div></div>'+
+    '<div><div class="lbl" style="margin-bottom:9px">Kronologi singkat</div>'+
+      '<textarea id="lapor-text" class="inp" placeholder="Apa yang terjadi? Kapan? Fakta saja — tanpa opini." oninput="A.laporTyping(this.value)">'+esc(U.laporText)+'</textarea></div>'+
+    '<div onclick="A.toast(\'Kamera tidak tersedia di prototipe — foto dilewati.\',\'#8B7355\')" style="border:1.5px dashed #D4DDD6;border-radius:11px;padding:15px 16px;display:flex;align-items:center;gap:12px;background:#fff;cursor:pointer">'+
+      '<svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2.5" stroke="#8B7355" stroke-width="1.7"/><circle cx="12" cy="13" r="3.5" stroke="#8B7355" stroke-width="1.7"/><path d="M8 6l1.2-2h5.6L16 6" stroke="#8B7355" stroke-width="1.7" stroke-linejoin="round"/></svg>'+
+      '<div><div style="font-size:12.5px;font-weight:600;color:var(--teks2)">Tambah foto bukti</div>'+
+      '<div style="font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:1px">Opsional · mempercepat verifikasi</div></div></div>'+
+    '<div class="serif" style="background:rgba(46,107,79,.06);border:1px solid rgba(46,107,79,.18);border-radius:11px;padding:12px 15px;font-size:12px;color:var(--teks2);line-height:1.6">Identitas Anda dirahasiakan. Laporan palsu menurunkan skor kepercayaan dan dapat menonaktifkan proteksi.</div>'+
+    '<button id="btn-lapor" class="btn btn-p" style="font-size:14px;padding:15px" '+(U.laporCat?'':'disabled')+' onclick="A.laporSubmit()">Kirim ke verifikasi Lurah</button>';
+}
+
+/* ── PROTEKSI ── */
+function renderProteksi(){
+  const v=$('#view-proteksi');
+  const p=S.protection;
+  if(!(p && p.active)){
+    // ── belum aktif: onboarding + pilih metode bayar ──
+    const rows = ['gopay','shopeepay','qris','card'].map(k=>{
+      const m=PM[k];
+      const connected = (k==='gopay'||k==='shopeepay') ? S.wallets[k] : true;
+      const sub = k==='gopay'||k==='shopeepay'
+        ? (connected ? 'Terhubung · '+maskPhone(S.wallets[k]) : 'Belum terhubung — ketuk untuk hubungkan')
+        : m.desc;
+      return '<div class="mth'+(U.paySel===k?' on':'')+'" onclick="A.pickMethod(\''+k+'\')">'+
+        '<div class="radio"></div>'+
+        '<div class="paylogo" style="width:34px;height:34px;border-radius:10px;background:'+m.color+';font-size:13px">'+m.name[0]+'</div>'+
+        '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+m.name+'</div>'+
+        '<div style="font-size:10px;color:var(--tanah);margin-top:1px">'+sub+'</div></div>'+
+        ((k==='gopay'||k==='shopeepay') && !connected ? '<span class="paylink" onclick="event.stopPropagation();A.openConnect(\''+k+'\')">Hubungkan</span>':'')+
+        '</div>';
+    }).join('');
+    v.innerHTML =
+      '<div><div class="h-view">Proteksi mikro</div>'+
+      '<div class="sub-view">Asuransi parametrik — payout tanpa klaim.</div></div>'+
+      (!S.verified ?
+        '<div class="vbanner"><div style="flex:1;min-width:0"><div class="t">Perlu verifikasi NIK</div>'+
+        '<div class="s">Polis atas nama sesuai KTP — verifikasi diminta saat aktivasi.</div></div>'+
+        '<button onclick="A.openNik()">Verifikasi</button></div>' : '')+
+      '<div class="card-dark"><div class="kawung"></div><div style="position:relative">'+
+        '<div class="lbl-w">Proteksi Keluarga · Jakarta Pusat</div>'+
+        '<div style="display:flex;align-items:baseline;gap:7px;margin-top:10px"><span style="font-size:34px;font-weight:700;letter-spacing:-1.5px">Rp15rb</span><span style="font-size:12px;color:rgba(255,255,255,.45)">/bulan</span></div>'+
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">'+
+          ['Payout otomatis Rp1.500.000 saat threshold terpicu','Tanpa klaim, tanpa formulir, tanpa survei','Melindungi hingga 4 anggota keluarga'].map(t=>
+          '<div style="display:flex;gap:9px;align-items:flex-start"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M5 12.5 10 17.5 19 7" stroke="#7FC79E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+          '<span class="serif" style="font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.5">'+t+'</span></div>').join('')+
+        '</div></div></div>'+
+      '<div><div class="lbl" style="margin-bottom:9px">Metode pembayaran premi</div>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">'+rows+'</div></div>'+
+      '<button class="btn btn-p" style="font-size:14px;padding:15px" '+(U.paySel?'':'disabled')+' onclick="A.payPremium()">Bayar Rp15.000 &amp; aktifkan proteksi</button>'+
+      '<div style="text-align:center"><span class="demo-tag">Pembayaran simulasi — tidak ada dana nyata</span></div>';
+    return;
+  }
+  // ── aktif: kartu polis + payout ──
+  const destKey=S.payoutDest;
+  const dest = destKey && S.wallets[destKey] ? PM[destKey].name+' · '+maskPhone(S.wallets[destKey]) : null;
+  const hist = S.payoutHistory.map(h=>
+    '<div class="card" style="border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">'+
+    '<div style="width:9px;height:9px;border-radius:50%;background:#C4553A;flex-shrink:0;animation:pulse 2s infinite"></div>'+
+    '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+esc(h.title)+'</div>'+
+    '<div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">'+esc(h.sub)+'</div></div>'+
+    '<div style="text-align:right;flex-shrink:0"><div style="font-size:15px;font-weight:700;color:#C4553A">'+esc(h.amt)+'</div>'+
+    '<div style="font-size:8.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:1px">'+esc(h.date)+'</div></div></div>').join('');
+  v.innerHTML =
+    '<div><div class="h-view">Proteksi mikro</div>'+
+    '<div class="sub-view">Asuransi parametrik — payout tanpa klaim.</div></div>'+
+    '<div class="card-dark"><div class="kawung"></div><div style="position:relative">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px">'+
+        '<div><div class="lbl-w" style="letter-spacing:1.8px">Polis parametrik · '+esc(p.policy)+'</div>'+
+        '<div style="font-size:16.5px;font-weight:700;margin-top:4px">Proteksi Keluarga Menteng</div></div>'+
+        '<div style="display:flex;align-items:center;gap:5px;background:rgba(46,107,79,.4);border:1px solid rgba(255,255,255,.15);border-radius:13px;padding:4px 10px"><span style="width:6px;height:6px;border-radius:50%;background:#7FC79E"></span><span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.9)">Aktif</span></div></div>'+
+      '<div style="display:flex;gap:24px;margin-bottom:15px">'+
+        '<div><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Premi</div><div style="font-size:16px;font-weight:700">Rp15rb<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4)">/bln</span></div></div>'+
+        '<div><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Payout</div><div style="font-size:16px;font-weight:700;color:#E07B5F">Rp1,5jt</div></div>'+
+        '<div style="min-width:0"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Dibayar via</div><div style="font-size:16px;font-weight:700">'+PM[p.method].name+'</div></div></div>'+
+      '<div style="background:rgba(255,255,255,.07);border-radius:10px;padding:11px 14px">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5)">Trigger threshold</span>'+
+        '<span style="font-size:10.5px;font-weight:600;color:#E07B5F">'+S.thresh+'/5 valid</span></div>'+
+        '<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;background:#E07B5F;width:'+(S.thresh/5*100)+'%"></div></div>'+
+        '<div class="serif" style="font-size:11.5px;color:rgba(255,255,255,.5);margin-top:8px">'+
+        (S.thresh>=4?(5-S.thresh)+' laporan valid lagi sebelum payout otomatis terkirim.':'Payout otomatis terkirim jika 5 laporan valid dalam 24 jam.')+'</div></div>'+
+    '</div></div>'+
+    '<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:12px">'+
+      '<div class="paylogo" style="width:36px;height:36px;background:'+(dest?PM[destKey].color:'#D4DDD6')+';font-size:14px">'+(dest?PM[destKey].name[0]:'?')+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600">Tujuan payout</div>'+
+      '<div style="font-size:10.5px;color:'+(dest?'var(--tanah)':'var(--sirine)')+';margin-top:1px">'+(dest||'Belum diatur — hubungkan e-wallet')+'</div></div>'+
+      '<span class="paylink" onclick="A.openPayManager()">Atur</span></div>'+
+    '<div><div style="font-size:14.5px;font-weight:600;margin:2px 2px 10px">Riwayat payout</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+      (hist || '<div class="card" style="border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">'+
+      '<div style="width:9px;height:9px;border-radius:50%;background:#D4DDD6;flex-shrink:0"></div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600">Belum ada trigger bulan ini</div>'+
+      '<div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">Kondisi wilayah terpantau</div></div>'+
+      '<div style="font-size:15px;font-weight:700;color:var(--tanah)">—</div></div>')+
+    '</div></div>'+
+    '<div><div style="font-size:14.5px;font-weight:600;margin:2px 2px 10px">Cara kerja</div>'+
+    '<div class="card" style="border-radius:14px;padding:4px 16px">'+
+      [['1','Warga melapor','Laporan geo-tagged dikirim warga terverifikasi NIK di kelurahan Anda.'],
+       ['2','Lurah memverifikasi','Setiap laporan dicek Lurah. Hanya yang valid masuk Risk Engine.'],
+       ['3','Payout otomatis','5 laporan valid dalam 24 jam memicu transfer Rp1,5jt — tanpa klaim, tanpa formulir.']].map(s=>
+      '<div style="display:flex;gap:13px;padding:14px 0;border-bottom:1px solid var(--bg);align-items:flex-start">'+
+      '<div class="hexnum" style="width:24px;height:26px;font-size:11px">'+s[0]+'</div>'+
+      '<div><div style="font-size:13px;font-weight:600">'+s[1]+'</div>'+
+      '<div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.55;margin-top:1px">'+s[2]+'</div></div></div>').join('')+
+    '</div></div>';
+}
+
+/* ── PROFIL ── */
+function renderProfil(){
+  const v=$('#view-profil');
+  const u=S.user; if(!u) return;
+  const init=u.name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  v.innerHTML =
+    '<div><div class="h-view">Profil</div></div>'+
+    '<div class="card" style="padding:18px;display:flex;align-items:center;gap:15px">'+
+      '<div style="width:54px;height:54px;border-radius:50%;background:var(--hutan);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff;flex-shrink:0">'+esc(init)+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">'+esc(u.name)+'</div>'+
+      '<div class="serif" style="font-size:12px;color:var(--tanah);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(u.email)+' · Google</div>'+
+      (S.verified
+        ? '<span class="pill pill-green" style="margin-top:7px"><i></i>NIK terverifikasi · '+maskNik(S.nik)+'</span>'
+        : '<span class="pill pill-amber" style="margin-top:7px;cursor:pointer" onclick="A.openNik()"><i></i>Belum verifikasi — ketuk untuk verifikasi NIK</span>')+
+      '</div></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+      '<div class="card" style="border-radius:13px;padding:14px;text-align:center"><div style="font-size:23px;font-weight:700;letter-spacing:-1px">'+S.reportsSubmitted+'</div><div style="font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:3px">Laporan</div></div>'+
+      '<div class="card" style="border-radius:13px;padding:14px;text-align:center"><div style="font-size:23px;font-weight:700;letter-spacing:-1px;color:var(--daun)">'+S.reportsVerified+'</div><div style="font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:3px">Terverifikasi</div></div>'+
+      '<div class="card" style="border-radius:13px;padding:14px;text-align:center"><div style="font-size:23px;font-weight:700;letter-spacing:-1px;color:var(--sirine)">'+(S.verified?100:'—')+'</div><div style="font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--tanah);margin-top:3px">Skor percaya</div></div></div>'+
+    '<div class="card" style="border-radius:16px;padding:2px 16px">'+
+      '<div class="setrow" onclick="A.openNik()"><i style="background:'+(S.verified?'#2E6B4F':'#B8853C')+'"></i><b>Verifikasi identitas (NIK)</b>'+
+        '<span style="font-size:10px;font-weight:600;color:'+(S.verified?'var(--daun)':'var(--amber)')+'">'+(S.verified?'Selesai':'Belum')+'</span>'+arrow()+'</div>'+
+      '<div class="setrow" onclick="A.openPayManager()"><i style="background:#2E6B4F"></i><b>Metode pembayaran &amp; payout</b>'+
+        '<span style="font-size:10px;font-weight:600;color:var(--tanah)">'+walletCount()+'</span>'+arrow()+'</div>'+
+      '<div class="setrow" onclick="A.toast(\'Pengaturan keluarga tersedia setelah pilot.\',\'#8B7355\')"><i style="background:#2E6B4F"></i><b>Anggota keluarga terlindungi</b>'+arrow()+'</div>'+
+      '<div class="setrow" onclick="A.toast(\'Notifikasi sudah aktif untuk Kel. Menteng.\',\'#8B7355\')"><i style="background:#8B7355"></i><b>Notifikasi &amp; ambang peringatan</b>'+arrow()+'</div>'+
+      '<div class="setrow" onclick="A.toast(\'Bahasa: Indonesia.\',\'#8B7355\')"><i style="background:#8B7355"></i><b>Bahasa · Indonesia</b>'+arrow()+'</div>'+
+      '<div class="setrow" onclick="A.confirmLogout()"><i style="background:#C4553A"></i><b style="color:var(--sirine)">Keluar</b>'+arrow()+'</div>'+
+    '</div>'+
+    '<div style="text-align:center;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--tanah);padding-top:4px">JAGA v1.0 · Guard your ground.</div>';
+  function arrow(){ return '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="#8B7355" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function walletCount(){ const n=['gopay','shopeepay'].filter(k=>S.wallets[k]).length; return n? n+' e-wallet':'Belum ada'; }
+}
+
+/* ═══════════════════ pseudo-QR ═══════════════════ */
+function qrSvg(seedStr){
+  let s=0; for(const ch of seedStr) s=(s*31+ch.charCodeAt(0))>>>0;
+  const rnd=()=>{ s=(s*1103515245+12345)>>>0; return s/4294967296; };
+  const N=25; let r='';
+  const inF=(x,y)=>(x<7&&y<7)||(x>=N-7&&y<7)||(x<7&&y>=N-7);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    let f;
+    if(inF(x,y)){
+      const lx=x<7?x:x-(N-7), ly=y<7?y:y-(N-7);
+      f=Math.max(Math.abs(lx-3),Math.abs(ly-3))!==2;
+    } else f=rnd()<0.44;
+    if(f) r+='<rect x="'+x+'" y="'+y+'" width="1" height="1"/>';
+  }
+  return '<svg viewBox="0 0 '+N+' '+N+'" style="width:100%;height:100%"><g fill="#1B3A2D">'+r+'</g></svg>';
+}
+
+/* ═══════════════════ actions ═══════════════════ */
+const A = window.A = {
+  toast, closeModal,
+
+  /* ── navigasi ── */
+  go(tab){
+    U.tab=tab; U.notifOpen=false;
+    $('#notif-panel').classList.add('hidden'); $('#notif-scrim').classList.add('hidden');
+    ['beranda','peta','lapor','proteksi','profil'].forEach(t=>
+      $('#view-'+t).classList.toggle('hidden', t!==tab));
+    setTabIcons();
+    if(tab==='beranda'){ renderHome(); leafletReady(()=>{ initMap('mini'); if(maps.mini) setTimeout(()=>maps.mini.invalidateSize(),60); }); }
+    if(tab==='peta'){ renderChips(); leafletReady(()=>{ initMap('full'); if(maps.full) setTimeout(()=>maps.full.invalidateSize(),60); }); }
+    if(tab==='lapor') renderLapor();
+    if(tab==='proteksi') renderProteksi();
+    if(tab==='profil') renderProfil();
+    renderZoneSheet();
+  },
+  toggleNotif(){
+    U.notifOpen=!U.notifOpen;
+    $('#notif-panel').classList.toggle('hidden', !U.notifOpen);
+    $('#notif-scrim').classList.toggle('hidden', !U.notifOpen);
+    if(U.notifOpen){ S.unread=false; save(); $('#bell-dot').classList.add('hidden'); }
+  },
+
+  /* ── peta ── */
+  zoom(kind,dir){ const m=maps[kind]; if(m && m._container.isConnected) dir>0?m.zoomIn():m.zoomOut(); },
+  recenter(kind){ const m=maps[kind]; if(m && m._container.isConnected) m.flyTo(CENTER, kind==='mini'?13:13.5); },
+  setFilter(f){ U.filter=f; if(U.selId!=null){ const s=Z[U.selId][1]; const cat=s>60?'tinggi':s>=30?'sedang':'rendah'; if(f!=='semua'&&f!==cat){U.selId=null; renderZoneSheet();} } renderChips(); refreshZones(); },
+  tapZone(i,kind){
+    if(kind==='mini'){ U.selId=i; this.go('peta'); refreshZones(); return; }
+    U.selId = U.selId===i ? null : i;
+    refreshZones(); renderZoneSheet();
+  },
+  closeZone(){ U.selId=null; refreshZones(); renderZoneSheet(); },
+  laporFrom(name){ U.selId=null; renderZoneSheet(); U.laporLoc=name; U.laporSent=false; this.go('lapor'); },
+
+  /* ── login (Google simulasi) ── */
+  openAccounts(){
+    const accs=[ {name:'Rina Wijaya', email:'rina.wijaya@gmail.com', c:'#7B1FA2'},
+                 {name:'Joshua Albert', email:'amenhaleluya07@gmail.com', c:'#1565C0'} ];
+    openModal(
+      '<div style="text-align:center;padding:4px 0 10px">'+
+        '<svg width="30" height="30" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>'+
+        '<div style="font-size:15.5px;font-weight:600;color:#1f1f1f;margin-top:8px">Pilih akun</div>'+
+        '<div style="font-size:12px;color:#5f6368;margin-top:2px">untuk melanjutkan ke <b style="color:var(--hutan)">JAGA</b> <span class="demo-tag" style="margin-left:4px">Simulasi</span></div></div>'+
+      '<div id="acc-list">'+
+      accs.map((a,i)=>'<div class="acc" onclick="A.pickAccount('+i+')">'+
+        '<div class="av" style="background:'+a.c+'">'+a.name[0]+'</div>'+
+        '<div><div class="nm">'+esc(a.name)+'</div><div class="em">'+esc(a.email)+'</div></div></div>').join('')+
+      '<div class="acc" onclick="A.otherAccount()">'+
+        '<div class="av" style="background:#F1F3F4;color:#5f6368;border:1px solid #dadce0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.4" stroke="#5f6368" stroke-width="1.8"/><path d="M5 19.5c1.1-3.2 3.8-4.7 7-4.7s5.9 1.5 7 4.7" stroke="#5f6368" stroke-width="1.8" stroke-linecap="round"/></svg></div>'+
+        '<div class="nm" style="font-weight:500">Gunakan akun lain</div></div></div>'+
+      '<div style="font-size:10.5px;color:#5f6368;line-height:1.6;padding:10px 10px 0;border-top:1px solid var(--bg);margin-top:8px">Ini prototipe: tidak ada data yang dikirim ke Google. Akun hanya disimpan di perangkat Anda.</div>'
+    );
+    A._accs=accs;
+  },
+  pickAccount(i){
+    const a=A._accs[i];
+    A._loginLoading(a);
+  },
+  otherAccount(){
+    openModal(
+      '<div class="mhead"><div><div class="mtitle">Akun lain <span class="demo-tag">Simulasi</span></div>'+
+      '<div class="msub">Masukkan nama & email untuk membuat akun demo. Tanpa kata sandi.</div></div>'+closeX+'</div>'+
+      '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">'+
+      '<input id="oa-name" class="inp" placeholder="Nama lengkap" maxlength="40">'+
+      '<input id="oa-email" class="inp" type="email" placeholder="nama@gmail.com" maxlength="60">'+
+      '<div id="oa-err" class="err-msg hidden"></div>'+
+      '<button class="btn btn-dark" onclick="A.otherSubmit()">Lanjutkan</button></div>'
+    );
+    setTimeout(()=>{ const el=$('#oa-name'); if(el) el.focus(); },80);
+  },
+  otherSubmit(){
+    const name=$('#oa-name').value.trim(), email=$('#oa-email').value.trim();
+    const err=$('#oa-err');
+    if(name.length<2){ err.textContent='Nama minimal 2 karakter.'; err.classList.remove('hidden'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ err.textContent='Format email tidak valid.'; err.classList.remove('hidden'); return; }
+    A._loginLoading({name, email});
+  },
+  _loginLoading(a){
+    openModal('<div style="text-align:center;padding:22px 6px"><div class="spin big"></div>'+
+      '<div style="font-size:13.5px;font-weight:600;margin-top:14px">Masuk dengan Google…</div>'+
+      '<div class="serif" style="font-size:12px;color:var(--teks2);margin-top:3px">'+esc(a.email)+'</div></div>', true);
+    timer(()=>{
+      S.user={name:a.name, email:a.email}; save();
+      closeModal(); enterApp();
+      toast('Masuk sebagai '+a.name.split(' ')[0]+'. Selamat datang di JAGA.');
+      if(!S.verified) timer(()=>A.openNik('Satu langkah lagi — verifikasi NIK untuk membuka semua fitur.'), 900);
+    }, 1400);
+  },
+  confirmLogout(){
+    openModal(
+      '<div class="mtitle">Keluar dari JAGA?</div>'+
+      '<div class="msub">Sesi demo di perangkat ini akan dihapus — termasuk verifikasi NIK, e-wallet, dan polis simulasi.</div>'+
+      '<div style="display:flex;gap:8px;margin-top:18px">'+
+      '<button class="btn btn-o" style="flex:1" onclick="A.closeModal()">Batal</button>'+
+      '<button class="btn btn-p" style="flex:1" onclick="A.logout()">Keluar</button></div>', true);
+  },
+  logout(){
+    clearTimers(); closeModal();
+    S=fresh(); save();
+    Object.keys(maps).forEach(k=>{ if(maps[k]){ try{maps[k].remove();}catch(e){} maps[k]=null; } });
+    Object.assign(U,{tab:'beranda',filter:'semua',selId:null,laporCat:null,laporText:'',laporSent:false,paySel:null,pending:null});
+    $('#scr-app').classList.add('hidden');
+    $('#scr-login').classList.remove('hidden');
+  },
+
+  /* ── verifikasi NIK ── */
+  openNik(reason){
+    if(S.verified){ toast('Identitas Anda sudah terverifikasi.'); return; }
+    openModal(
+      '<div class="mhead"><div><div class="mtitle">Verifikasi NIK</div>'+
+      '<div class="msub">'+esc(reason||'Fitur Lapor, Proteksi & payout hanya untuk warga terverifikasi KTP.')+'</div></div>'+closeX+'</div>'+
+      '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">'+
+      '<div><div class="lbl" style="margin-bottom:6px">NIK (16 digit)</div>'+
+      '<input id="nik-inp" class="inp" inputmode="numeric" maxlength="16" placeholder="317104••••••••••" oninput="A.nikTyping(this)">'+
+      '<div id="nik-count" style="font-size:10px;color:var(--tanah);margin-top:5px">0/16 digit</div></div>'+
+      '<div><div class="lbl" style="margin-bottom:6px">Nama sesuai KTP</div>'+
+      '<input id="nik-nama" class="inp" maxlength="40" value="'+esc(S.user?S.user.name:'')+'"></div>'+
+      '<div id="nik-err" class="err-msg hidden"></div>'+
+      '<div class="serif" style="background:rgba(46,107,79,.06);border:1px solid rgba(46,107,79,.18);border-radius:11px;padding:11px 14px;font-size:11.5px;color:var(--teks2);line-height:1.55">Simulasi pengecekan Dukcapil — data tidak dikirim ke mana pun, hanya tersimpan di perangkat Anda.</div>'+
+      '<button id="nik-btn" class="btn btn-dark" onclick="A.nikSubmit()">Verifikasi sekarang</button></div>'
+    );
+    setTimeout(()=>{ const el=$('#nik-inp'); if(el) el.focus(); },80);
+  },
+  nikTyping(el){
+    el.value=el.value.replace(/\D/g,'').slice(0,16);
+    const c=$('#nik-count'); if(c) c.textContent=el.value.length+'/16 digit';
+  },
+  nikSubmit(){
+    const nik=$('#nik-inp').value, nama=$('#nik-nama').value.trim(), err=$('#nik-err');
+    err.classList.add('hidden');
+    if(!/^\d{16}$/.test(nik)){ err.textContent='NIK harus tepat 16 digit angka.'; err.classList.remove('hidden'); $('#nik-inp').classList.add('inp-err'); return; }
+    if(nama.length<2){ err.textContent='Nama sesuai KTP wajib diisi.'; err.classList.remove('hidden'); return; }
+    const btn=$('#nik-btn'); btn.disabled=true;
+    btn.innerHTML='<span style="display:inline-flex;align-items:center;gap:9px"><span class="spin" style="width:16px;height:16px;border-width:2px;margin:0;border-top-color:#fff;border-color:rgba(255,255,255,.3);border-top-color:#fff"></span>Memeriksa ke Dukcapil (simulasi)…</span>';
+    timer(()=>{
+      S.verified=true; S.nik=nik;
+      if(S.user && nama && nama!==S.user.name) S.user.name=nama;
+      save(); closeModal();
+      toast('Identitas terverifikasi. Semua fitur terbuka.');
+      pushNotif('#2E6B4F','Identitas terverifikasi','NIK '+maskNik(nik)+' cocok dengan data kependudukan (simulasi).');
+      renderHome();
+      if(U.tab==='lapor') renderLapor();
+      if(U.tab==='proteksi') renderProteksi();
+      if(U.tab==='profil') renderProfil();
+      const p=U.pending; U.pending=null;
+      if(p) timer(p, 350);
+    }, 1800);
+  },
+  _requireVerify(reason, next){
+    if(S.verified) return true;
+    U.pending=next;
+    this.openNik(reason);
+    return false;
+  },
+
+  /* ── lapor ── */
+  pickCat(c){
+    U.laporCat = U.laporCat===c ? null : c;
+    $$('#lapor-cats .cat').forEach(el=>el.classList.toggle('on', el.dataset.cat===U.laporCat));
+    const btn=$('#btn-lapor'); if(btn) btn.disabled=!U.laporCat;
+  },
+  laporTyping(v){ U.laporText=v; },
+  openKelurahan(){
+    openModal(
+      '<div class="mhead"><div><div class="mtitle">Pilih lokasi kejadian</div>'+
+      '<div class="msub">Kelurahan di wilayah pilot Jakarta Pusat.</div></div>'+closeX+'</div>'+
+      '<div style="margin-top:10px;max-height:330px;overflow-y:auto">'+
+      Z.map(z=>{ const b=band(z[1]); return '<div class="setrow" onclick="A.pickKelurahan(\''+esc(z[0])+'\')">'+
+        '<i style="background:'+b.c+'"></i><b>Kel. '+esc(z[0])+'</b>'+
+        '<span style="font-size:11px;font-weight:700;color:'+b.c+'">'+z[1]+'</span></div>'; }).join('')+'</div>'
+    );
+  },
+  pickKelurahan(name){ U.laporLoc=name; closeModal(); renderLapor(); },
+  laporSubmit(){
+    if(!U.laporCat) return;
+    if(!this._requireVerify('Untuk mengirim laporan, verifikasi NIK dulu — laporan anonim tidak masuk Risk Engine.', ()=>A.laporSubmit())) return;
+    U.laporSent=true; U.laporStage=2;
+    S.reportsSubmitted++; save();
+    renderLapor(); renderProfil && S.user && null;
+    // simulasi verifikasi Lurah ±4.5 detik
+    timer(()=>{
+      U.laporStage=3;
+      S.reportsVerified++;
+      S.thresh=Math.min(5, S.thresh+1);
+      S.myFeed.unshift({dot:'#C4553A', title:U.laporCat+' · Kel. '+U.laporLoc, body:'Laporan Anda — diverifikasi Lurah dan masuk Risk Engine.', status:'Terverifikasi Lurah', pill:'pill-green', time:nowHM()});
+      S.myFeed=S.myFeed.slice(0,3);
+      save();
+      pushNotif('#2E6B4F','Laporan Anda diverifikasi','Lurah '+U.laporLoc+' memverifikasi laporan dalam 2 menit (simulasi).');
+      if(U.tab==='lapor') renderLapor();
+      renderHome();
+      if(U.tab==='proteksi') renderProteksi();
+      if(S.thresh>=5) A._tryPayout();
+    }, 4500);
+  },
+  laporReset(){ U.laporSent=false; U.laporStage=1; U.laporCat=null; U.laporText=''; renderLapor(); },
+
+  /* ── payout parametrik ── */
+  _tryPayout(){
+    if(S.thresh<5) return;
+    if(!(S.protection && S.protection.active)){
+      pushNotif('#C4553A','Threshold terlampaui','5 laporan valid di Kel. Menteng. Aktifkan proteksi untuk payout otomatis berikutnya.');
+      S.thresh=4; save(); renderHome(); return;
+    }
+    if(!S.payoutDest || !S.wallets[S.payoutDest]){
+      pushNotif('#B8853C','Payout tertahan','Threshold terpicu, tapi tujuan payout belum diatur. Hubungkan e-wallet di Proteksi.');
+      toast('Payout tertahan — atur tujuan e-wallet dulu.', '#B8853C');
+      S._pendingPayout=true; save();
+      if(U.tab==='proteksi') renderProteksi();
+      return;
+    }
+    this._doPayout();
+  },
+  _doPayout(){
+    const dk=S.payoutDest, w=S.wallets[dk];
+    S.thresh=0; S._pendingPayout=false;
+    S.payoutHistory.unshift({title:'Payout terproses', sub:'Trigger parametrik · 5 laporan valid · ke '+PM[dk].name+' '+maskPhone(w), amt:'Rp1,5jt', date:'Hari ini'});
+    save();
+    pushNotif('#C4553A','Auto-payout Rp1.500.000 terkirim','Ke '+PM[dk].name+' '+maskPhone(w)+' — didukung 5 laporan terverifikasi Lurah Menteng.');
+    $('#payout-sub').textContent='Rp1.500.000 → '+PM[dk].name+' '+maskPhone(w)+' (simulasi)';
+    $('#payout-toast').classList.remove('hidden');
+    timer(()=>A.hidePayoutToast(), 9000);
+    renderHome();
+    if(U.tab==='proteksi') renderProteksi();
+  },
+  hidePayoutToast(){ $('#payout-toast').classList.add('hidden'); },
+
+  /* ── e-wallet connect ── */
+  openConnect(k){
+    const m=PM[k];
+    openModal(
+      '<div class="mhead"><div><div class="mtitle">Hubungkan '+m.name+' <span class="demo-tag">Simulasi</span></div>'+
+      '<div class="msub">Masukkan nomor HP yang terdaftar di '+m.name+'. Kami hanya menyimpan nomor — tanpa PIN, tanpa saldo.</div></div>'+closeX+'</div>'+
+      '<div style="display:flex;align-items:center;gap:11px;margin:16px 0 12px">'+
+      '<div class="paylogo" style="background:'+m.color+'">'+m.name[0]+'</div>'+
+      '<div><div style="font-size:13.5px;font-weight:600">'+m.name+'</div><div style="font-size:10.5px;color:var(--tanah)">'+m.desc+'</div></div></div>'+
+      '<input id="cn-phone" class="inp" inputmode="numeric" maxlength="13" placeholder="08xxxxxxxxxx" oninput="this.value=this.value.replace(/\\D/g,\'\')">'+
+      '<div id="cn-err" class="err-msg hidden"></div>'+
+      '<button id="cn-btn" class="btn btn-dark" style="width:100%;margin-top:12px" onclick="A.connectSubmit(\''+k+'\')">Hubungkan akun</button>'
+    );
+    setTimeout(()=>{ const el=$('#cn-phone'); if(el) el.focus(); },80);
+  },
+  connectSubmit(k){
+    const ph=$('#cn-phone').value, err=$('#cn-err');
+    err.classList.add('hidden');
+    if(!/^08\d{8,11}$/.test(ph)){ err.textContent='Nomor HP tidak valid — awali 08, panjang 10–13 digit.'; err.classList.remove('hidden'); $('#cn-phone').classList.add('inp-err'); return; }
+    const btn=$('#cn-btn'); btn.disabled=true;
+    btn.innerHTML='<span style="display:inline-flex;align-items:center;gap:9px"><span class="spin" style="width:16px;height:16px;border-width:2px;margin:0;border-color:rgba(255,255,255,.3);border-top-color:#fff"></span>Menghubungi '+PM[k].name+'…</span>';
+    timer(()=>{
+      S.wallets[k]=ph;
+      if(!S.payoutDest) S.payoutDest=k;
+      save(); closeModal();
+      toast(PM[k].name+' terhubung · '+maskPhone(ph));
+      pushNotif('#2E6B4F',PM[k].name+' terhubung','Siap dipakai untuk premi & payout otomatis.');
+      if(U.tab==='proteksi') renderProteksi();
+      if(U.tab==='profil') renderProfil();
+      if(S._pendingPayout && S.payoutDest && S.wallets[S.payoutDest] && S.thresh>=5) A._doPayout();
+    }, 1600);
+  },
+  disconnect(k){
+    openModal(
+      '<div class="mtitle">Putuskan '+PM[k].name+'?</div>'+
+      '<div class="msub">'+(S.payoutDest===k?'Ini tujuan payout Anda saat ini — payout akan tertahan sampai Anda memilih e-wallet lain.':'Anda bisa menghubungkannya lagi kapan saja.')+'</div>'+
+      '<div style="display:flex;gap:8px;margin-top:18px">'+
+      '<button class="btn btn-o" style="flex:1" onclick="A.openPayManager()">Batal</button>'+
+      '<button class="btn btn-p" style="flex:1" onclick="A.disconnectYes(\''+k+'\')">Putuskan</button></div>', true);
+  },
+  disconnectYes(k){
+    S.wallets[k]=null;
+    if(S.payoutDest===k){ const other=['gopay','shopeepay'].find(x=>S.wallets[x]); S.payoutDest=other||null; }
+    save();
+    toast(PM[k].name+' diputuskan.', '#8B7355');
+    this.openPayManager();
+    if(U.tab==='proteksi') renderProteksi();
+    if(U.tab==='profil') renderProfil();
+  },
+  openPayManager(){
+    const wrow = k => {
+      const m=PM[k], w=S.wallets[k];
+      return '<div class="payrow"><div class="paylogo" style="background:'+m.color+'">'+m.name[0]+'</div>'+
+        '<div style="flex:1;min-width:0"><div class="pn">'+m.name+'</div>'+
+        '<div class="ps">'+(w?'Terhubung · '+maskPhone(w):'Belum terhubung')+'</div></div>'+
+        (w ? '<span class="paylink red" onclick="A.disconnect(\''+k+'\')">Putuskan</span>'
+           : '<span class="paylink" onclick="A.openConnect(\''+k+'\')">Hubungkan</span>')+'</div>';
+    };
+    const connected=['gopay','shopeepay'].filter(k=>S.wallets[k]);
+    openModal(
+      '<div class="mhead"><div><div class="mtitle">Pembayaran &amp; payout</div>'+
+      '<div class="msub">E-wallet untuk premi bulanan dan penerimaan payout otomatis.</div></div>'+closeX+'</div>'+
+      '<div style="margin-top:8px">'+wrow('gopay')+wrow('shopeepay')+
+      '<div class="payrow"><div class="paylogo" style="background:#1B3A2D">Q</div>'+
+        '<div style="flex:1"><div class="pn">QRIS</div><div class="ps">Selalu tersedia untuk bayar premi — tanpa perlu terhubung</div></div></div>'+
+      '<div class="payrow"><div class="paylogo" style="background:#4A6356">K</div>'+
+        '<div style="flex:1"><div class="pn">Kartu debit/kredit</div><div class="ps">Via JagaPay Gateway saat pembayaran premi</div></div></div></div>'+
+      (connected.length ?
+        '<div class="lbl" style="margin:16px 0 8px">Tujuan payout otomatis</div>'+
+        connected.map(k=>'<div class="mth'+(S.payoutDest===k?' on':'')+'" style="margin-bottom:8px" onclick="A.setDest(\''+k+'\')">'+
+          '<div class="radio"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+PM[k].name+'</div>'+
+          '<div style="font-size:10px;color:var(--tanah)">'+maskPhone(S.wallets[k])+'</div></div></div>').join('')
+        : '<div class="serif" style="font-size:12px;color:var(--teks2);background:var(--bg);border-radius:10px;padding:11px 14px;margin-top:12px;line-height:1.55">Hubungkan GoPay atau ShopeePay agar payout otomatis punya tujuan transfer.</div>')
+    );
+  },
+  setDest(k){
+    S.payoutDest=k; save();
+    toast('Tujuan payout: '+PM[k].name+' '+maskPhone(S.wallets[k]));
+    this.openPayManager();
+    if(U.tab==='proteksi') renderProteksi();
+    if(S._pendingPayout && S.thresh>=5) { closeModal(); this._doPayout(); }
+  },
+
+  /* ── bayar premi & aktivasi proteksi ── */
+  pickMethod(k){
+    if((k==='gopay'||k==='shopeepay') && !S.wallets[k]){ this.openConnect(k); return; }
+    U.paySel = U.paySel===k ? null : k;
+    renderProteksi();
+  },
+  payPremium(){
+    if(!U.paySel) return;
+    if(!this._requireVerify('Polis diterbitkan atas nama sesuai KTP — verifikasi NIK dulu.', ()=>A.payPremium())) return;
+    const k=U.paySel;
+    if(k==='qris') return this._payQris();
+    if(k==='card') return this._payGateway();
+    this._payWallet(k);
+  },
+  _payWallet(k){
+    const m=PM[k];
+    openModal(
+      '<div style="text-align:center;padding:8px 4px">'+
+      '<div class="paylogo" style="background:'+m.color+';margin:0 auto 12px">'+m.name[0]+'</div>'+
+      '<div class="mtitle">Bayar dengan '+m.name+'</div>'+
+      '<div class="msub" style="margin-top:6px">Premi Juli · Proteksi Keluarga Menteng</div>'+
+      '<div style="font-size:30px;font-weight:700;letter-spacing:-1px;margin:14px 0 2px">Rp15.000</div>'+
+      '<div style="font-size:10.5px;color:var(--tanah)">'+m.name+' · '+maskPhone(S.wallets[k])+'</div>'+
+      '<button id="pw-btn" class="btn btn-p" style="width:100%;margin-top:18px" onclick="A._payWalletGo(\''+k+'\')">Konfirmasi pembayaran</button>'+
+      '<div style="margin-top:10px"><span class="demo-tag">Simulasi — tanpa dana nyata</span></div></div>', true);
+  },
+  _payWalletGo(k){
+    const btn=$('#pw-btn'); btn.disabled=true;
+    btn.innerHTML='<span style="display:inline-flex;align-items:center;gap:9px"><span class="spin" style="width:16px;height:16px;border-width:2px;margin:0;border-color:rgba(255,255,255,.35);border-top-color:#fff"></span>Memproses via '+PM[k].name+'…</span>';
+    timer(()=>A._activate(k), 2000);
+  },
+  _payQris(){
+    openModal(
+      '<div style="text-align:center;padding:4px 2px">'+
+      '<div class="mtitle">Bayar via QRIS</div>'+
+      '<div class="msub" style="margin-top:4px">Scan dengan aplikasi e-wallet atau m-banking mana pun.</div>'+
+      '<div class="qr-wrap">'+qrSvg('JAGA-PREMI-'+(S.user?S.user.email:'demo'))+'</div>'+
+      '<div style="font-size:22px;font-weight:700;letter-spacing:-.5px">Rp15.000</div>'+
+      '<div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tanah);margin-top:2px">JAGA · NMID SIMULASI00123 · berlaku 15 menit</div>'+
+      '<button id="qr-btn" class="btn btn-dark" style="width:100%;margin-top:16px" onclick="A._payQrisGo()">Saya sudah bayar — cek status</button>'+
+      '<div style="margin-top:10px"><span class="demo-tag">QR simulasi — jangan discan sungguhan</span></div></div>', true);
+  },
+  _payQrisGo(){
+    const btn=$('#qr-btn'); btn.disabled=true;
+    btn.innerHTML='<span style="display:inline-flex;align-items:center;gap:9px"><span class="spin" style="width:16px;height:16px;border-width:2px;margin:0;border-color:rgba(255,255,255,.35);border-top-color:#fff"></span>Mengecek status pembayaran…</span>';
+    timer(()=>A._activate('qris'), 1600);
+  },
+  _payGateway(){
+    openModal(
+      '<div style="border-bottom:1px solid var(--bg);padding-bottom:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'+
+      '<div style="display:flex;align-items:center;gap:9px"><div class="paylogo" style="width:30px;height:30px;border-radius:8px;background:#4A6356;font-size:12px">J</div>'+
+      '<div><div style="font-size:13.5px;font-weight:700">JagaPay Gateway</div><div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--tanah)">Halaman pembayaran aman · simulasi</div></div></div>'+closeX+'</div>'+
+      '<div style="background:var(--bg);border-radius:11px;padding:13px 15px;margin-bottom:14px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="color:var(--teks2)">Premi Juli · Proteksi Keluarga</span><b>Rp15.000</b></div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--teks2)">Biaya layanan</span><b>Rp0</b></div>'+
+      '<div style="border-top:1px dashed var(--abu);margin:9px 0"></div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:13.5px"><b>Total</b><b style="color:var(--sirine)">Rp15.000</b></div></div>'+
+      '<div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.6;margin-bottom:14px">Di aplikasi produksi, di sinilah Anda diarahkan ke halaman payment gateway (Midtrans/Xendit) untuk memasukkan data kartu. Prototipe ini melewati langkah itu — pilih hasil transaksi untuk melanjutkan.</div>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">'+
+      '<button class="btn btn-dark" onclick="A._gatewayResult(true)">Simulasikan pembayaran berhasil</button>'+
+      '<button class="btn btn-o" onclick="A._gatewayResult(false)">Simulasikan pembayaran gagal</button></div>'
+    );
+  },
+  _gatewayResult(ok){
+    if(!ok){
+      openModal(
+        '<div style="text-align:center;padding:8px 4px">'+
+        '<div class="hexnum" style="width:44px;height:48px;margin:0 auto 12px;background:var(--sirine);font-size:19px">!</div>'+
+        '<div class="mtitle">Pembayaran gagal</div>'+
+        '<div class="msub" style="margin-top:6px">Bank menolak transaksi (kode 05 — simulasi). Tidak ada dana terpotong.</div>'+
+        '<div style="display:flex;gap:8px;margin-top:18px">'+
+        '<button class="btn btn-o" style="flex:1" onclick="A.closeModal()">Tutup</button>'+
+        '<button class="btn btn-p" style="flex:1" onclick="A._payGateway()">Coba lagi</button></div></div>', true);
+      return;
+    }
+    openModal('<div style="text-align:center;padding:22px 6px"><div class="spin big"></div>'+
+      '<div style="font-size:13.5px;font-weight:600;margin-top:14px">Mengonfirmasi ke gateway…</div></div>', true);
+    timer(()=>A._activate('card'), 1400);
+  },
+  _activate(method){
+    S.protection={active:true, method, since:new Date().toISOString().slice(0,10), policy:'JG-'+String(Math.floor(1000+Math.random()*9000))+'-'+String(Math.floor(1000+Math.random()*9000))};
+    save();
+    openModal(
+      '<div style="text-align:center;padding:10px 4px">'+
+      '<div class="hexnum" style="width:60px;height:66px;margin:0 auto 14px;background:var(--daun)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17.5 19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+      '<div class="mtitle">Pembayaran berhasil</div>'+
+      '<div class="msub" style="margin-top:6px">Rp15.000 via '+PM[method].name+' — proteksi mikro Anda aktif hingga akhir bulan.</div>'+
+      '<div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--tanah);margin-top:12px">Polis '+esc(S.protection.policy)+'</div>'+
+      '<button class="btn btn-dark" style="width:100%;margin-top:16px" onclick="A._activated()">Lihat polis saya</button></div>', true);
+    pushNotif('#2E6B4F','Premi Juli terbayar','Rp15.000 via '+PM[method].name+'. Proteksi aktif — payout otomatis siap.');
+    toast('Proteksi mikro aktif. Guard your ground.');
+  },
+  _activated(){
+    closeModal(); U.paySel=null;
+    renderProteksi(); renderHome();
+    if(!S.payoutDest) timer(()=>{ toast('Hubungkan e-wallet sebagai tujuan payout.', '#B8853C'); }, 800);
+    if(S.thresh>=5) this._tryPayout();
+  },
+};
+
+/* ═══════════════════ boot ═══════════════════ */
+function enterApp(){
+  $('#scr-login').classList.add('hidden');
+  $('#scr-app').classList.remove('hidden');
+  renderNotifs();
+  $('#bell-dot').classList.toggle('hidden', !S.unread);
+  A.go('beranda');
+}
+function tickClock(){
+  const el=$('#sb-time'); if(el) el.textContent=nowHM();
+}
+setInterval(tickClock, 30000); tickClock();
+if(S.user) enterApp();
+</script>
+</body>
+</html>
