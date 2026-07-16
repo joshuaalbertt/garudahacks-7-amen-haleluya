@@ -951,7 +951,7 @@ function renderProteksi(){
       '<div class="card-dark" style="padding:20px"><div class="kawung"></div><div style="position:relative">'+
         '<div class="lbl-w">Proteksi Keluarga · Jakarta Pusat</div>'+
         '<div style="display:flex;align-items:baseline;gap:7px;margin-top:10px;flex-wrap:wrap"><span style="font-size:32px;font-weight:700;letter-spacing:-1.5px">'+rupiah(m.premium)+'</span><span style="font-size:12px;color:rgba(255,255,255,.45)">/minggu</span></div>'+
-        '<div class="serif" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">Menyesuaikan skor keamanan wilayah Anda</div>'+
+        '<div class="serif" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">Mengikuti skor wilayah Anda saat ini ('+m.score+'/100) — turun saat lingkungan makin aman</div>'+
         '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">'+
           ['Bantuan otomatis Rp1.500.000 saat kondisi wilayah memburuk','Tanpa klaim, tanpa formulir, tanpa survei','Melindungi hingga 4 anggota keluarga'].map(t=>
           '<div style="display:flex;gap:9px;align-items:flex-start"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M5 12.5 10 17.5 19 7" stroke="#7FC79E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
@@ -982,7 +982,7 @@ function renderProteksi(){
         '<div style="font-size:16.5px;font-weight:700;margin-top:4px">Proteksi Keluarga Menteng</div></div>'+
         '<div style="display:flex;align-items:center;gap:5px;background:rgba(46,107,79,.4);border:1px solid rgba(255,255,255,.15);border-radius:13px;padding:4px 10px;flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#7FC79E"></span><span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.9)">Aktif</span></div></div>'+
       '<div style="display:flex;gap:16px;margin-bottom:15px;flex-wrap:wrap">'+
-        '<div style="min-width:70px"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Iuran</div><div style="font-size:15px;font-weight:700">'+rupiah(p.premium)+'<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4)">/mgg</span></div></div>'+
+        '<div style="min-width:70px"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Iuran minggu ini</div><div style="font-size:15px;font-weight:700">'+rupiah(m.premium)+'<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4)">/mgg</span></div></div>'+
         '<div style="min-width:60px"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Bantuan</div><div style="font-size:15px;font-weight:700;color:#E07B5F">Rp1,5jt</div></div>'+
         '<div style="min-width:60px"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Via</div><div style="font-size:15px;font-weight:700">'+PM[p.method].name.split(' ')[0]+'</div></div></div>'+
       '<div style="background:rgba(255,255,255,.07);border-radius:10px;padding:11px 14px">'+
