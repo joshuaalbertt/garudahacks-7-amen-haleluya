@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JAGA — Guard your ground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/jaga.css">
+</head>
+<body>
+
+<div class="device">
+  <div class="island"></div>
+  <div class="screen">
+
+  <!-- ═══════════ APP ═══════════ -->
+  <section id="scr-app" class="hidden">
+    <div class="statusbar">
+      <span id="sb-time">09:41</span>
+      <span class="sb-r">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="#1B3A2D"/><rect x="4.5" y="5" width="3" height="7" rx="1" fill="#1B3A2D"/><rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="#1B3A2D"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1B3A2D" opacity=".35"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 2.4C10.3 2.4 12.4 3.3 14 4.8l1.4-1.5C13.4 1.3 10.8 .2 8 .2S2.6 1.3 .6 3.3L2 4.8C3.6 3.3 5.7 2.4 8 2.4Z" fill="#1B3A2D"/><path d="M8 6.2c1.3 0 2.5.5 3.4 1.4l1.4-1.5C11.5 4.8 9.8 4 8 4s-3.5.8-4.8 2.1l1.4 1.5C5.5 6.7 6.7 6.2 8 6.2Z" fill="#1B3A2D"/><circle cx="8" cy="10" r="1.6" fill="#1B3A2D"/></svg>
+        <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="1" y="1" width="21" height="11" rx="3" stroke="#1B3A2D" stroke-opacity=".4"/><rect x="2.5" y="2.5" width="17" height="8" rx="1.5" fill="#1B3A2D"/><rect x="23" y="4.5" width="2" height="4" rx="1" fill="#1B3A2D" fill-opacity=".4"/></svg>
+      </span>
+    </div>
+
+    <!-- header -->
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-brand">
+          <svg width="27" height="27" viewBox="0 0 52 52" fill="none"><polygon points="26,4 46,15 46,37 26,48 6,37 6,15" fill="#1B3A2D"/><ellipse cx="26" cy="18" rx="5" ry="3" fill="rgba(255,255,255,.6)"/><ellipse cx="34" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.6)" transform="rotate(90 34 26)"/><ellipse cx="26" cy="34" rx="5" ry="3" fill="rgba(255,255,255,.6)"/><ellipse cx="18" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.6)" transform="rotate(90 18 26)"/><circle cx="26" cy="26" r="4" fill="#C4553A"/><circle cx="26" cy="26" r="1.5" fill="#fff" opacity=".9"/></svg>
+          <b>JAGA</b>
+        </div>
+        <div class="loc-pill" title="Lokasi terdeteksi via GPS">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="10" r="3" fill="#C4553A"/><path d="M12 21c4-4.5 7-7.8 7-11a7 7 0 1 0-14 0c0 3.2 3 6.5 7 11Z" stroke="#1B3A2D" stroke-width="1.8"/></svg>
+          <span class="loc-txt"><span>Kel. Menteng</span><small>Jakarta Pusat</small></span>
+        </div>
+        <div class="btn-bell" onclick="A.toggleNotif()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z" stroke="#1B3A2D" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="#1B3A2D" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="bell-dot" id="bell-dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- content -->
+    <div class="content">
+
+      <!-- BERANDA -->
+      <div id="view-beranda" class="view">
+        <div>
+          <div class="serif" id="home-greet" style="font-size:22px">Selamat datang.</div>
+          <div class="lbl" id="home-date" style="margin-top:3px"></div>
+        </div>
+
+        <div id="home-vbanner"></div>
+
+        <!-- skor keamanan -->
+        <div class="card-dark" style="padding:20px">
+          <div class="kawung"></div>
+          <div style="position:relative">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div style="min-width:0">
+                <div class="lbl-w">Skor keamanan · Kel. Menteng</div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-top:10px">
+                  <span id="home-score" style="font-size:54px;font-weight:700;color:#E07B5F;letter-spacing:-3px;line-height:1">—</span>
+                  <span style="font-size:13px;color:rgba(255,255,255,.35)">/100</span>
+                </div>
+                <div class="serif" id="home-status" style="font-size:12.5px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.4"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0">
+                <div id="home-bars" style="display:flex;align-items:flex-end;gap:3px;height:44px"></div>
+                <div style="font-size:8.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.3)">12 jam terakhir</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;background:rgba(255,255,255,.07);border-radius:10px;padding:11px 14px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5)">Menuju pencairan otomatis</span>
+                <span style="font-size:10.5px;font-weight:600;color:#E07B5F" id="home-thresh-n">—</span>
+              </div>
+              <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden"><div id="home-thresh-bar" style="height:100%;background:#E07B5F;width:0%;transition:width .4s"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- mini map -->
+        <div class="card" style="overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px">
+            <div>
+              <div style="font-size:14.5px;font-weight:600">Peta keamanan</div>
+              <div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">Geser &amp; zoom · ketuk area untuk detail</div>
+            </div>
+            <div onclick="A.go('peta')" style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--daun);cursor:pointer;padding:7px 11px;border:1px solid var(--abu);border-radius:8px">Perbesar</div>
+          </div>
+          <div class="mapbox">
+            <div id="map-mini" class="mapel"></div>
+            <div class="map-ctl" style="position:absolute;right:10px;top:10px;z-index:var(--z-map-ctl)">
+              <div class="map-btn" onclick="A.zoom('mini',1)">+</div>
+              <div class="map-btn" onclick="A.zoom('mini',-1)">−</div>
+            </div>
+            <div class="legend" style="position:absolute;left:10px;bottom:10px;z-index:var(--z-map-ctl)">
+              <div><i style="background:#C4553A"></i><b>Tinggi</b></div>
+              <div><i style="background:#B8853C"></i><b>Sedang</b></div>
+              <div><i style="background:#2E6B4F"></i><b>Rendah</b></div>
+            </div>
+            <div class="attrib" style="position:absolute;right:10px;bottom:10px;z-index:var(--z-map-ctl)">© OpenStreetMap · CARTO</div>
+            <div id="out-mini" class="out-overlay hidden">
+              <div class="out-card">
+                <div class="hexnum" style="width:38px;height:42px;margin:0 auto 10px;background:var(--sirine);font-size:17px">!</div>
+                <div style="font-size:14px;font-weight:700;letter-spacing:-.2px">Anda di luar jangkauan</div>
+                <div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.55;margin:6px 0 13px">Data JAGA baru tersedia untuk Jakarta Pusat (pilot).</div>
+                <button class="btn btn-dark" style="padding:10px 18px;font-size:12px" onclick="A.recenter('mini')">Kembali ke area</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="home-protect"></div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 10px">
+            <span style="font-size:14.5px;font-weight:600">Laporan warga</span>
+            <span style="font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--tanah)">Hari ini</span>
+          </div>
+          <div id="home-feed" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- PETA -->
+      <div id="view-peta" class="view view-map hidden">
+        <div style="position:relative;height:100%">
+          <div id="map-full" class="mapel"></div>
+          <div id="chips-filter" style="position:absolute;left:0;right:0;top:0;z-index:var(--z-map-ctl);display:flex;gap:6px;padding:10px 16px;pointer-events:none"></div>
+          <div class="map-ctl" style="position:absolute;right:12px;top:58px;z-index:var(--z-map-ctl)">
+            <div class="map-btn" onclick="A.zoom('full',1)">+</div>
+            <div class="map-btn" onclick="A.zoom('full',-1)">−</div>
+            <div class="map-btn" onclick="A.recenter('full')" title="Kembali ke Jakarta Pusat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6.5" stroke="#1B3A2D" stroke-width="1.8"/><circle cx="12" cy="12" r="2" fill="#C4553A"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="#1B3A2D" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <div class="legend" style="position:absolute;left:12px;bottom:104px;z-index:var(--z-map-ctl);flex-direction:column;gap:5px;align-items:flex-start">
+            <div><i style="background:#C4553A"></i><b>Tinggi &gt;60</b></div>
+            <div><i style="background:#B8853C"></i><b>Sedang 30–60</b></div>
+            <div><i style="background:#2E6B4F"></i><b>Rendah &lt;30</b></div>
+          </div>
+          <div class="attrib" style="position:absolute;right:12px;bottom:104px;z-index:var(--z-map-ctl)">© OpenStreetMap · CARTO</div>
+          <div id="out-full" class="out-overlay hidden">
+            <div class="out-card">
+              <div class="hexnum" style="width:44px;height:48px;margin:0 auto 12px;background:var(--sirine);font-size:19px">!</div>
+              <div style="font-size:15.5px;font-weight:700;letter-spacing:-.3px">Anda di luar jangkauan</div>
+              <div class="serif" style="font-size:12.5px;color:var(--teks2);line-height:1.6;margin:7px 0 15px">Data JAGA baru tersedia untuk wilayah pilot Jakarta Pusat. Wilayah lain menyusul.</div>
+              <button class="btn btn-dark" style="width:100%;font-size:12.5px" onclick="A.recenter('full')">Kembali ke Jakarta Pusat</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAPOR -->
+      <div id="view-lapor" class="view hidden"></div>
+      <!-- PROTEKSI -->
+      <div id="view-proteksi" class="view hidden"></div>
+      <!-- PROFIL -->
+      <div id="view-profil" class="view hidden"></div>
+    </div>
+
+    <!-- SOS floating -->
+    <div id="sos-fab" class="sos-fab" onclick="A.openSos()"><span>SOS</span><small>Darurat</small></div>
+
+    <!-- zone sheet -->
+    <div id="sheet-zone" class="hidden"></div>
+
+    <!-- payout toast -->
+    <div id="payout-toast" class="hidden">
+      <div class="pd"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#fff">Dana bantuan cair</div>
+        <div class="serif" id="payout-sub" style="font-size:11.5px;color:rgba(255,255,255,.5)"></div>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:#E07B5F;flex-shrink:0">Rp1,5jt</div>
+      <div onclick="A.hidePayoutToast()" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="rgba(255,255,255,.6)" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <!-- notif -->
+    <div id="notif-scrim" class="hidden" onclick="A.toggleNotif()"></div>
+    <div id="notif-panel" class="hidden">
+      <div class="nh">Notifikasi</div>
+      <div id="notif-list"></div>
+    </div>
+
+    <!-- tabbar -->
+    <div class="tabbar">
+      <div class="tab" id="tab-beranda" onclick="A.go('beranda')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5h-5v5H4Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/></svg>
+        <span>Beranda</span>
+      </div>
+      <div class="tab" id="tab-peta" onclick="A.go('peta')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 5.5-9 5.5-9-5.5L12 3Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/><path d="M3.5 13.5 12 18.8l8.5-5.3" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Peta</span>
+      </div>
+      <div class="tab tab-lapor" id="tab-lapor" onclick="A.go('lapor')">
+        <div class="hexbtn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+        <span>Lapor</span>
+      </div>
+      <div class="tab" id="tab-proteksi" onclick="A.go('proteksi')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 2.8 20 7.3v9.4l-8 4.5-8-4.5V7.3L12 2.8Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4" class="tkf" fill="#9AA89D"/></svg>
+        <span>Proteksi</span>
+      </div>
+      <div class="tab" id="tab-profil" onclick="A.go('profil')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.6" class="tk" stroke="#9AA89D" stroke-width="1.9"/><path d="M4.5 20c1.2-3.4 4-5 7.5-5s6.3 1.6 7.5 5" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linecap="round"/></svg>
+        <span>Profil</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ LOGIN (clean) ═══════════ -->
+  <section id="scr-login">
+    <div class="statusbar">
+      <span>09:41</span>
+      <span class="sb-r">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="#1B3A2D"/><rect x="4.5" y="5" width="3" height="7" rx="1" fill="#1B3A2D"/><rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="#1B3A2D"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1B3A2D" opacity=".35"/></svg>
+        <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="1" y="1" width="21" height="11" rx="3" stroke="#1B3A2D" stroke-opacity=".4"/><rect x="2.5" y="2.5" width="17" height="8" rx="1.5" fill="#1B3A2D"/><rect x="23" y="4.5" width="2" height="4" rx="1" fill="#1B3A2D" fill-opacity=".4"/></svg>
+      </span>
+    </div>
+    <div class="login-body">
+      <div class="login-logo">
+        <svg width="72" height="72" viewBox="0 0 52 52" fill="none"><polygon points="26,4 46,15 46,37 26,48 6,37 6,15" fill="#1B3A2D"/><ellipse cx="26" cy="18" rx="5" ry="3" fill="rgba(255,255,255,.6)"/><ellipse cx="34" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.6)" transform="rotate(90 34 26)"/><ellipse cx="26" cy="34" rx="5" ry="3" fill="rgba(255,255,255,.6)"/><ellipse cx="18" cy="26" rx="5" ry="3" fill="rgba(255,255,255,.6)" transform="rotate(90 18 26)"/><circle cx="26" cy="26" r="4.5" fill="#C4553A"/><circle cx="26" cy="26" r="1.7" fill="#fff" opacity=".9"/></svg>
+      </div>
+      <div class="login-word">JAGA</div>
+      <div class="login-tag"><b>Guard Your Ground.</b><br>Warga Jaga Warga.</div>
+      <div class="login-actions">
+        <button class="lbtn lbtn-g" onclick="A.openAccounts()">
+          <svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Masuk dengan Google
+        </button>
+        <button class="lbtn lbtn-e" onclick="A.openEmail()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="#fff" stroke-width="1.8"/><path d="M4 7l8 6 8-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Masuk dengan Email
+        </button>
+      </div>
+    </div>
+    <div class="home-ind"></div>
+  </section>
+
+  <!-- modals -->
+  <div id="modal-root"></div>
+  <!-- toasts -->
+  <div id="toasts"></div>
+  <div class="home-ind"></div>
+  </div>
+</div>
+
+<div class="stage-caption">JAGA · Prototipe interaktif — semua data &amp; pembayaran simulasi</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
