@@ -552,15 +552,16 @@ const RiskEngine = (()=>{
 const MENTENG = { city:'Kota Jakarta Pusat', realtime:88, lambdaDaily:2 };  // lambda=2 → threshold pencairan = 5
 
 /* ═══════════════════ state ═══════════════════ */
-const KEY='jaga_demo_v5';
+const KEY='jaga_demo_v6';
 function fresh(){
   return {
     user:null, verified:false, nik:null,
     wallets:{gopay:null, shopeepay:null},
     payoutDest:null,
     protection:null,               // {active,method,since,policy,premium}
-    zoneDelta:{},                  // kenaikan skor per-kelurahan dari laporan hari ini
-    zoneReports:{ 'Menteng':3 },   // laporan valid hari ini per-kelurahan (Menteng menuju pencairan)
+    zoneN:{},                      // n laporan terverifikasi kumulatif per-kelurahan (kredibilitas Z)
+    zoneRT:{},                     // skor realtime per-kelurahan (naik saat ada laporan valid)
+    zoneReports:{ 'Menteng':3 },   // laporan valid HARI INI per-kelurahan (menuju ambang pencairan)
     reportsVerifiedTotal:6,        // kredibilitas kumulatif → Z
     reportsSubmitted:0,
     family:[ {name:'Andi Wijaya', rel:'Pasangan'}, {name:'Sari Wijaya', rel:'Anak'} ],
@@ -584,15 +585,33 @@ const U = { tab:'beranda', filter:'semua', selId:null, notifOpen:false,
 function timer(fn,ms){ const t=setTimeout(()=>{ U.timers=U.timers.filter(x=>x!==t); fn(); },ms); U.timers.push(t); return t; }
 function clearTimers(){ U.timers.forEach(clearTimeout); U.timers=[]; }
 
-/* skor risiko per-kelurahan (dinamis: base + kenaikan dari laporan) */
+/* ── skor per-kelurahan: MURNI rumus engine  Z·RealTime + (1−Z)·Baseline ──
+   n awal = N0 (kredibilitas parsial); RT awal dikalibrasi supaya skor awal = angka BPS tampilan.
+   Tiap laporan terverifikasi: n+1 (Z naik) dan RT +4 (cap 100) → skor naik lewat DUA jalur rumus. */
+const N0=8, RT_STEP=4;
 function zoneBase(name){ const z=Z.find(z=>z[0]===name); return z?z[1]:44; }
-function zoneScore(name){ return Math.max(0, Math.min(100, Math.round(zoneBase(name) + (S.zoneDelta[name]||0)))); }
+function zoneN(name){ return S.zoneN[name]!=null ? S.zoneN[name] : N0; }
+function zoneRT(name){
+  if(S.zoneRT[name]!=null) return S.zoneRT[name];
+  const Zc=RiskEngine.credibilityZ(N0), B=RiskEngine.getBaseline(MENTENG.city);
+  return Math.max(0, Math.min(100, (zoneBase(name) - (1-Zc)*B) / Zc));   // kalibrasi awal
+}
+function zoneScore(name){
+  return Math.max(0, Math.min(100, Math.round(RiskEngine.jagaRisk(MENTENG.city, zoneN(name), zoneRT(name)))));
+}
 function zoneReportsToday(name){ return (S.zoneReports && S.zoneReports[name]!=null) ? S.zoneReports[name] : 0; }
-/* derived: kondisi Menteng (kelurahan pengguna) — premi via engine, threshold via engine */
+function zoneTrigger(name){ return RiskEngine.payoutTrigger(MENTENG.lambdaDaily, zoneReportsToday(name)); }
+/* catat 1 laporan terverifikasi di kelurahan → semua angka mengikuti model */
+function zoneAddVerified(name){
+  S.zoneN[name]  = zoneN(name)+1;
+  S.zoneRT[name] = Math.min(100, zoneRT(name)+RT_STEP);
+  S.zoneReports[name] = zoneReportsToday(name)+1;
+}
+/* derived: kondisi kelurahan pengguna (Menteng) — premi mingguan selalu dari skor terkini */
 function menteng(){
   const score  = zoneScore('Menteng');
   const rToday = zoneReportsToday('Menteng');
-  const trig   = RiskEngine.payoutTrigger(MENTENG.lambdaDaily, rToday);
+  const trig   = zoneTrigger('Menteng');
   const premium= RiskEngine.premiumWeekly(score);
   return { score, threshold:trig.threshold, reportsToday:rToday, triggered:trig.triggered, premium };
 }
@@ -794,7 +813,7 @@ function renderHome(){
     '<div class="card" style="padding:15px 17px;display:flex;align-items:center;gap:13px;cursor:pointer" onclick="A.go(\'proteksi\')">'+
       '<div class="hexnum" style="width:40px;height:44px"><span style="width:10px;height:10px;border-radius:50%;background:#C4553A;border:2px solid rgba(255,255,255,.75)"></span></div>'+
       '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600">Proteksi keluarga aktif</div>'+
-      '<div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">'+rupiah(p.premium)+'/minggu · bantuan otomatis Rp1,5jt</div></div>'+
+      '<div class="serif" style="font-size:11.5px;color:var(--tanah);margin-top:1px">'+rupiah(m.premium)+'/minggu · bantuan otomatis Rp1,5jt</div></div>'+
       '<span class="pill pill-green"><i></i>Aktif</span></div>'
     :
     '<div class="card" style="padding:15px 17px;display:flex;align-items:center;gap:13px;cursor:pointer" onclick="A.go(\'proteksi\')">'+
@@ -823,9 +842,10 @@ function renderZoneSheet(){
   const sh=$('#sheet-zone');
   if(U.selId==null || (U.tab!=='peta' && U.tab!=='beranda')){ sh.classList.add('hidden'); return; }
   const z=Z[U.selId], sc=zoneScore(z[0]), b=band(sc);
-  const reports=Math.min(5, S.zoneReports[z[0]]!=null ? S.zoneReports[z[0]] : Math.round(sc/16));
-  const bumped=(S.zoneDelta[z[0]]||0)>0;
-  const trend = bumped ? 'Naik '+(S.zoneDelta[z[0]])+' poin — laporan warga baru saja terverifikasi.'
+  const th=zoneTrigger(z[0]).threshold;
+  const reports=Math.min(th, S.zoneReports[z[0]]!=null ? S.zoneReports[z[0]] : Math.round(sc/16));
+  const delta=sc-zoneBase(z[0]);
+  const trend = delta>0 ? 'Naik '+delta+' poin — laporan warga baru saja terverifikasi.'
     : sc>60 ? 'Naik '+Math.round(sc/4)+' poin dalam 6 jam terakhir. Perlu verifikasi warga sebelum bantuan cair.'
     : sc>=30 ? 'Stabil dalam 6 jam terakhir. Pantau perkembangan laporan.'
     : 'Turun dalam 6 jam terakhir. Kondisi wilayah kondusif.';
@@ -840,8 +860,8 @@ function renderZoneSheet(){
       '<div class="serif" style="font-size:12px;color:var(--teks2);line-height:1.5">'+trend+'</div></div></div>'+
     '<div style="background:var(--bg);border-radius:10px;padding:10px 14px;margin-bottom:13px">'+
       '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--teks2)">Menuju bantuan otomatis</span>'+
-      '<span style="font-size:10.5px;font-weight:600;color:'+b.c+'">'+reports+'/5 laporan</span></div>'+
-      '<div style="height:4px;border-radius:2px;background:var(--abu);overflow:hidden"><div style="height:100%;background:'+b.c+';width:'+(reports/5*100)+'%"></div></div></div>'+
+      '<span style="font-size:10.5px;font-weight:600;color:'+b.c+'">'+reports+'/'+th+' laporan</span></div>'+
+      '<div style="height:4px;border-radius:2px;background:var(--abu);overflow:hidden"><div style="height:100%;background:'+b.c+';width:'+(reports/th*100)+'%"></div></div></div>'+
     '<div style="display:flex;gap:8px">'+
       '<button class="btn btn-p" style="flex:1;font-size:12.5px;padding:12px" onclick="A.laporFrom(\''+esc(z[0])+'\')">Laporkan kejadian di sini</button>'+
       '<button class="btn btn-o" style="font-size:12.5px;padding:12px 16px" onclick="A.closeZone()">Tutup</button></div>';
@@ -1306,9 +1326,9 @@ const A = window.A = {
       '<div class="mhead"><div><div class="mtitle">Pilih lokasi kejadian</div>'+
       '<div class="msub">Kelurahan di wilayah pilot Jakarta Pusat.</div></div>'+closeX+'</div>'+
       '<div style="margin-top:10px">'+
-      Z.map(z=>{ const b=band(z[1]); return '<div class="setrow" onclick="A.pickKelurahan(\''+esc(z[0])+'\')">'+
+      Z.map(z=>{ const sc=zoneScore(z[0]), b=band(sc); return '<div class="setrow" onclick="A.pickKelurahan(\''+esc(z[0])+'\')">'+
         '<i style="background:'+b.c+'"></i><b>Kel. '+esc(z[0])+'</b>'+
-        '<span style="font-size:11px;font-weight:700;color:'+b.c+'">'+z[1]+'</span></div>'; }).join('')+'</div>'
+        '<span style="font-size:11px;font-weight:700;color:'+b.c+'">'+sc+'</span></div>'; }).join('')+'</div>'
     );
   },
   pickKelurahan(name){ U.laporLoc=name; closeModal(); renderLapor(); },
@@ -1322,49 +1342,61 @@ const A = window.A = {
       U.laporStage=3;
       const loc=U.laporLoc;
       S.reportsVerifiedTotal++;
-      // skor risiko kelurahan naik otomatis (maks sampai 100)
-      const room = 100 - zoneBase(loc);
-      S.zoneDelta[loc] = Math.min(room, (S.zoneDelta[loc]||0) + 5);
-      S.zoneReports[loc] = (S.zoneReports[loc]!=null ? S.zoneReports[loc] : 0) + 1;
+      zoneAddVerified(loc);           // n+1, realtime+4 → skor naik via rumus engine
       S.myFeed.unshift({dot:'#C4553A', title:U.laporCat+' · Kel. '+loc, body:'Laporan Anda — sudah diverifikasi warga & tercatat.', status:'Terverifikasi', pill:'pill-green', time:nowHM()});
       S.myFeed=S.myFeed.slice(0,3);
       save();
-      pushNotif('#2E6B4F','Laporan Anda diverifikasi','Skor risiko '+loc+' kini '+zoneScore(loc)+'/100 setelah verifikasi warga.');
+      pushNotif('#2E6B4F','Laporan Anda diverifikasi','Skor risiko '+loc+' kini '+zoneScore(loc)+'/100 · '+zoneReportsToday(loc)+'/'+zoneTrigger(loc).threshold+' laporan menuju pencairan.');
       toast('Skor risiko '+loc+' naik ke '+zoneScore(loc)+'/100.', '#C4553A');
       refreshZones();                 // peta ikut update
       if(U.tab==='lapor') renderLapor();
       renderHome();                   // skor & bar bantuan ikut update
       if(U.tab==='proteksi') renderProteksi();
       renderZoneSheet();
-      const m=menteng();
-      if(m.triggered) A._tryPayout();
+      A._tryPayout(loc);              // cek pencairan di kelurahan TEMPAT lapor, bukan cuma Menteng
     }, 4500);
   },
   laporReset(){ U.laporSent=false; U.laporStage=1; U.laporCat=null; U.laporText=''; renderLapor(); },
 
-  /* ── bantuan otomatis ── */
-  _tryPayout(){
-    const m=menteng();
-    if(!m.triggered) return;
+  /* ── bantuan otomatis (zone-aware) ── */
+  _tryPayout(loc){
+    loc = loc || 'Menteng';
+    const trig = zoneTrigger(loc);
+    if(!trig.triggered) return;
     if(!(S.protection && S.protection.active)){
-      pushNotif('#C4553A','Ambang bantuan terlampaui',m.threshold+' laporan valid di Kel. Menteng. Aktifkan proteksi untuk bantuan otomatis berikutnya.');
-      S.zoneReports['Menteng']=Math.max(0,m.threshold-1); save(); renderHome(); return;
+      pushNotif('#C4553A','Ambang bantuan terlampaui',trig.threshold+' laporan valid di Kel. '+loc+'. Aktifkan proteksi untuk bantuan otomatis berikutnya.');
+      S.zoneReports[loc]=Math.max(0,trig.threshold-1); save(); renderHome(); return;
     }
     if(!S.payoutDest || !S.wallets[S.payoutDest]){
-      pushNotif('#B8853C','Bantuan tertahan','Ambang terpicu, tapi tujuan bantuan belum diatur. Hubungkan e-wallet di Proteksi.');
-      toast('Bantuan tertahan — atur tujuan e-wallet dulu.', '#B8853C');
-      S._pendingPayout=true; save();
+      S._pendingPayout=true; S._pendingZone=loc; save();
+      pushNotif('#B8853C','Bantuan Rp1,5jt siap cair','Ambang di Kel. '+loc+' terpicu — hubungkan e-wallet untuk menerima dana.');
+      // modal eksplisit, bukan cuma toast — supaya pencairan tidak tertahan diam-diam
+      openModal(
+        '<div style="text-align:center;padding:8px 4px">'+
+        '<div class="hexnum" style="width:56px;height:62px;margin:0 auto 12px;background:var(--sirine)"><span style="font-size:20px">Rp</span></div>'+
+        '<div class="mtitle">Bantuan Rp1.500.000 siap cair</div>'+
+        '<div class="msub" style="margin-top:6px">Ambang di Kel. '+esc(loc)+' terpicu. Hubungkan e-wallet tujuan agar dana langsung masuk.</div>'+
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">'+
+        '<button class="btn btn-dark" onclick="A.openConnect(\'gopay\')">Hubungkan GoPay</button>'+
+        '<button class="btn btn-o" onclick="A.openConnect(\'shopeepay\')">Hubungkan ShopeePay</button></div></div>', true);
       if(U.tab==='proteksi') renderProteksi();
       return;
     }
-    this._doPayout();
+    this._doPayout(loc);
   },
-  _doPayout(){
+  _tryPayoutAll(){
+    // dipanggil setelah aktivasi/hubung wallet: cek semua kelurahan yang ambangnya sudah terpicu
+    const hit = Object.keys(S.zoneReports).find(k=>zoneTrigger(k).triggered);
+    if(hit) this._tryPayout(hit);
+  },
+  _doPayout(loc){
+    loc = loc || S._pendingZone || 'Menteng';
     const dk=S.payoutDest, w=S.wallets[dk];
-    S.zoneReports['Menteng']=0; S._pendingPayout=false;
-    S.payoutHistory.unshift({title:'Dana bantuan cair', sub:'Kondisi wilayah memburuk · 5 laporan valid · ke '+PM[dk].name+' '+maskPhone(w), amt:'Rp1,5jt', date:'Hari ini'});
+    const th=zoneTrigger(loc).threshold;
+    S.zoneReports[loc]=0; S._pendingPayout=false; S._pendingZone=null;
+    S.payoutHistory.unshift({title:'Dana bantuan cair · Kel. '+loc, sub:'Kondisi wilayah memburuk · '+th+' laporan valid · ke '+PM[dk].name+' '+maskPhone(w), amt:'Rp1,5jt', date:'Hari ini'});
     save();
-    pushNotif('#C4553A','Bantuan Rp1.500.000 terkirim','Ke '+PM[dk].name+' '+maskPhone(w)+' — didukung 5 laporan terverifikasi di Menteng.');
+    pushNotif('#C4553A','Bantuan Rp1.500.000 terkirim','Ke '+PM[dk].name+' '+maskPhone(w)+' — didukung '+th+' laporan terverifikasi di '+loc+'.');
     $('#payout-sub').textContent='Rp1.500.000 → '+PM[dk].name+' '+maskPhone(w)+' (simulasi)';
     $('#payout-toast').classList.remove('hidden');
     timer(()=>A.hidePayoutToast(), 9000);
@@ -1401,8 +1433,7 @@ const A = window.A = {
       pushNotif('#2E6B4F',PM[k].name+' terhubung','Siap dipakai untuk iuran & bantuan otomatis.');
       if(U.tab==='proteksi') renderProteksi();
       if(U.tab==='profil') renderProfil();
-      const m=menteng();
-      if(S._pendingPayout && S.payoutDest && S.wallets[S.payoutDest] && m.triggered) A._doPayout();
+      if(S._pendingPayout && S.payoutDest && S.wallets[S.payoutDest]) A._doPayout(S._pendingZone);
     }, 1600);
   },
   disconnect(k){
@@ -1453,8 +1484,7 @@ const A = window.A = {
     toast('Tujuan bantuan: '+PM[k].name+' '+maskPhone(S.wallets[k]));
     this.openPayManager();
     if(U.tab==='proteksi') renderProteksi();
-    const m=menteng();
-    if(S._pendingPayout && m.triggered){ closeModal(); this._doPayout(); }
+    if(S._pendingPayout){ closeModal(); this._doPayout(S._pendingZone); }
   },
 
   /* ── bayar iuran & aktivasi ── */
@@ -1557,8 +1587,7 @@ const A = window.A = {
     closeModal(); U.paySel=null;
     renderProteksi(); renderHome();
     if(!S.payoutDest) timer(()=>{ toast('Hubungkan e-wallet sebagai tujuan bantuan.', '#B8853C'); }, 800);
-    const m=menteng();
-    if(m.triggered) this._tryPayout();
+    this._tryPayoutAll();   // kalau ambang kelurahan mana pun sudah terpicu, langsung proses
   },
 };
 /* estimasi jumlah warga dari radius (deterministik) */
