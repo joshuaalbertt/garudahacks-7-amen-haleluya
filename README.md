@@ -4,7 +4,7 @@
 
 ## **1. Executive Summary**
 
-JAGA adalah platform urban safety net yang menggabungkan **prediksi risiko kejahatan** , **pelaporan terverifikasi** , dan **asuransi mikro parametrik** untuk keluarga berpenghasilan rendah. Berfokus pada kejahatan di kota metropolitan seperti Jakarta, JAGA tidak hanya memetakan bahaya, tetapi memberikan **perlindungan finansial otomatis** saat risiko terjadi. Sistem ini memosisikan seorang administrator lokal sebagai verifikator di setiap wilayah dengan insentif berbasis pencegahan, sehingga warga dan jajaran birokrasi bisa bekerja sama demi mewujudkan lingkungan yang aman dan terukur.
+JAGA adalah platform urban safety net yang menggabungkan **prediksi risiko kejahatan**, **pelaporan terverifikasi**, dan **asuransi mikro parametrik** untuk keluarga berpenghasilan rendah. Berfokus pada kejahatan di kota metropolitan seperti Jakarta, JAGA tidak hanya memetakan bahaya, tetapi memberikan **perlindungan finansial otomatis** saat risiko terjadi. Sistem ini memosisikan seorang administrator lokal sebagai verifikator di setiap wilayah dengan insentif berbasis pencegahan, sehingga warga dan jajaran birokrasi bisa bekerja sama demi mewujudkan lingkungan yang aman dan terukur.
 
 ## **2. Problem Statement**
 
@@ -26,7 +26,7 @@ Mesin penghitung probabilitas kejahatan per kelurahan menggunakan metode aktuari
 
 **Input:** Data historis kejahatan BPS DKI Jakarta dan real-time feed laporan terverifikasi dari warga. **Model:**
 
-Frequency Model: Poisson/Negative Binomial Regression.
+Frequency Model: Poisson Random Variable.
 
 
 **Output:** Crime Risk Score (1-100) per kelurahan, prediksi kejadian 24-72 jam, dan dasar harga premi asuransi.
@@ -37,19 +37,19 @@ Sistem pelaporan yang memitigasi fraud melalui validasi otoritas terdekat.
 
 #### **Dual-Mode Data:**
 
-Sinyal Mentah (Unverified): Masuk saat warga lapor, muncul di peta sebagai tanda khusus (transparansi awal), TIDAK memicu payout. Data Terverifikasi (Validated): Laporan yang disetujui Admin, masuk ke Risk Engine secara penuh, dan bisa memicu trigger asuransi. **Emergency SOS:** Tombol panic warga yang langsung mengirim alert ke sesama warga dalam radius 500m (bypass lurah untuk keadaan darurat absolut).
+Sinyal Mentah (Unverified): Masuk saat warga lapor, muncul di peta sebagai tanda khusus (transparansi awal), TIDAK memicu payout. Data Terverifikasi (Validated): Laporan yang disetujui Admin, masuk ke Risk Engine secara penuh, dan bisa memicu trigger asuransi. **Emergency SOS:** Tombol panic warga yang langsung mengirim alert ke sesama warga dalam radius 500m (bypass oleh administrator untuk keadaan darurat absolut).
 
 ### **Layer 3: Parametric Crime Micro-Insurance**
 
 Asuransi mikro dengan klaim otomatis berbasis data (tanpa surveyor, tanpa klaim manual).
 
-**Mekanisme:** Warga membayar premi mingguan murah (Rp5.000-15.000). Jika parameter trigger tercapai, uang otomatis masuk ke e-wallet. **Trigger Parameter:** Jumlah laporan Terverifikasi di suatu kelurahan > Threshold X dalam 24 jam. **Payout:** Rp500.000 - Rp2.000.000 per kejadian per keluarga.
+**Mekanisme:** Warga membayar premi mingguan murah (Rp5.000-15.000). Jika parameter trigger tercapai, uang otomatis masuk ke e-wallet. **Trigger Parameter:** Jumlah laporan Terverifikasi di suatu kelurahan melebihi Threshold kejadian harian. **Payout:** Rp500.000 - Rp1.500.000 per kejadian per keluarga.
 
 ## **4. SUPER WORKFLOW (End-to-End)**
 
 ### **A. Warga Flow (Pelapor & Tertanggung)**
 
-1. Warga melihat kejahatan → Buka JAGA → Isi form singkat (Jenis, Waktu, Lokasi).
+1. Warga melihat kejahatan → Buka JAGA → Isi form singkat (Jenis Kejadian, Lokasi, Deskripsi Singkat).
 
 2. Sistem mencatat sebagai **Sinyal Mentah** (muncul di peta sebagai ikon semi-transparan).
 
@@ -61,7 +61,7 @@ Asuransi mikro dengan klaim otomatis berbasis data (tanpa surveyor, tanpa klaim 
 
 **B. Admin Flow (Verifikator & Mitra Pencegahan)**
 
-1. Admin login ke Dashboard Admin Kelurahan.
+1. Admin login ke Dashboard Admin setiap region (Kelurahan).
 
 2. Melihat antrean laporan masuk + profil risiko kelurahan.
 
@@ -101,6 +101,6 @@ $$ \text{Total Incentive} = \text{Pilar 1 (Data Integrity)} + \text{Pilar 2 (Ris
 
 1. **Baseline Historis:** Gunakan publikasi BPS DKI Jakarta (Statistik Kejahatan) dan data kemiskinan sebagai prior distribution.
 
-2. **Real-Time Synthetic:** Generate data menggunakan Python ( numpy.random.poisson ) berdasarkan rata-rata tingkat kejadian kriminalitas ($\lambda$) tiap wilayah.
+2. **Real-Time Synthetic:** Generate data menggunakan Python ( numpy.random.poisson ) berdasarkan laju tingkat kejadian kriminalitas ($\lambda$) tiap wilayah.
 
-3. **Credibility Blending:** Sistem bisa tetap jalan meski data real-time sepi, karena di-backup oleh model historis. Saat ada spike laporan Lurah, sistem merespons secara adaptif.
+3. **Credibility Blending:** Sistem bisa tetap jalan meski data real-time sepi, karena di-backup oleh model historis. Saat ada spike laporan dari administrator, sistem merespons secara adaptif.

@@ -1,11 +1,7 @@
-/* ═══ render & komponen UI (toast, notif, modal, semua view) ═══
-   Catatan: string template memakai onclick="A.…" — A adalah namespace global
-   yang didaftarkan app.js (window.A), supaya handler tetap hidup setelah re-render. */
 import { $, $$, esc, nowHM, maskPhone, maskNik, rupiah } from './util.js';
 import { S, U, save, menteng, zoneScore, zoneBase, zoneReportsToday, zoneTrigger } from './state.js';
 import { Z, PM, FEED0, band } from './data.js';
 
-/* ── toast & notifikasi ── */
 export function toast(msg, color){
   const el = document.createElement('div');
   el.className = 'toast';
@@ -26,7 +22,6 @@ export function renderNotifs(){
     '<div class="tm">'+esc(n.time)+'</div></div>').join('');
 }
 
-/* ── modal ── */
 export function openModal(html, center){
   closeModal();
   const m = document.createElement('div');
@@ -38,7 +33,6 @@ export function openModal(html, center){
 export function closeModal(){ const m = $('#modal-live'); if(m) m.remove(); }
 export const closeX = '<div class="mclose" onclick="A.closeModal()"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="#4A6356" stroke-width="1.8" stroke-linecap="round"/></svg></div>';
 
-/* ── tabbar ── */
 export function setTabIcons(){
   ['beranda','peta','lapor','proteksi','profil'].forEach(t=>{
     const el = $('#tab-'+t), on = U.tab===t;
@@ -49,7 +43,6 @@ export function setTabIcons(){
   });
 }
 
-/* ── BERANDA ── */
 export function renderHome(){
   const m = menteng();
   const h = new Date().getHours();
@@ -129,7 +122,6 @@ export function renderZoneSheet(){
   sh.classList.remove('hidden');
 }
 
-/* ── LAPOR ── */
 export function renderLapor(){
   const v = $('#view-lapor');
   if(U.laporSent){
@@ -183,7 +175,6 @@ export function renderLapor(){
     '<button id="btn-lapor" class="btn btn-p" style="font-size:14px;padding:15px" '+(U.laporCat?'':'disabled')+' onclick="A.laporSubmit()">Kirim laporan</button>';
 }
 
-/* ── PROTEKSI ── */
 export function renderProteksi(){
   const v = $('#view-proteksi');
   const p = S.protection, m = menteng();
@@ -282,7 +273,6 @@ export function renderProteksi(){
     '</div></div>';
 }
 
-/* ── PROFIL ── */
 export function renderProfil(){
   const v = $('#view-profil');
   const u = S.user; if(!u) return;
@@ -317,7 +307,7 @@ export function renderProfil(){
     '<div style="text-align:center;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--tanah);padding-top:4px">JAGA · Guard Your Ground. Warga Jaga Warga.</div>';
 }
 
-/* ── pseudo-QR (visual sahaja) ── */
+/* ═══ QR TEST ═══ */
 export function qrSvg(seedStr){
   let s = 0; for(const ch of seedStr) s = (s*31 + ch.charCodeAt(0)) >>> 0;
   const rnd = () => { s = (s*1103515245 + 12345) >>> 0; return s/4294967296; };

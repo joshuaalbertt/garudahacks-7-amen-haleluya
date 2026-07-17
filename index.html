@@ -15,7 +15,6 @@
   <div class="island"></div>
   <div class="screen">
 
-  <!-- ═══════════ APP ═══════════ -->
   <section id="scr-app" class="hidden">
     <div class="statusbar">
       <span id="sb-time">09:41</span>
@@ -26,7 +25,6 @@
       </span>
     </div>
 
-    <!-- header -->
     <div class="hdr">
       <div class="hdr-row">
         <div class="hdr-brand">
@@ -44,10 +42,8 @@
       </div>
     </div>
 
-    <!-- content -->
     <div class="content">
 
-      <!-- BERANDA -->
       <div id="view-beranda" class="view">
         <div>
           <div class="serif" id="home-greet" style="font-size:22px">Selamat datang.</div>
@@ -56,7 +52,6 @@
 
         <div id="home-vbanner"></div>
 
-        <!-- skor keamanan -->
         <div class="card-dark" style="padding:20px">
           <div class="kawung"></div>
           <div style="position:relative">
@@ -84,7 +79,6 @@
           </div>
         </div>
 
-        <!-- mini map -->
         <div class="card" style="overflow:hidden">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px">
             <div>
@@ -127,7 +121,6 @@
         </div>
       </div>
 
-      <!-- PETA -->
       <div id="view-peta" class="view view-map hidden">
         <div style="position:relative;height:100%">
           <div id="map-full" class="mapel"></div>
@@ -156,21 +149,15 @@
         </div>
       </div>
 
-      <!-- LAPOR -->
       <div id="view-lapor" class="view hidden"></div>
-      <!-- PROTEKSI -->
       <div id="view-proteksi" class="view hidden"></div>
-      <!-- PROFIL -->
       <div id="view-profil" class="view hidden"></div>
     </div>
 
-    <!-- SOS floating -->
     <div id="sos-fab" class="sos-fab" onclick="A.openSos()"><span>SOS</span><small>Darurat</small></div>
 
-    <!-- zone sheet -->
     <div id="sheet-zone" class="hidden"></div>
 
-    <!-- payout toast -->
     <div id="payout-toast" class="hidden">
       <div class="pd"></div>
       <div style="flex:1;min-width:0">
@@ -183,14 +170,12 @@
       </div>
     </div>
 
-    <!-- notif -->
     <div id="notif-scrim" class="hidden" onclick="A.toggleNotif()"></div>
     <div id="notif-panel" class="hidden">
       <div class="nh">Notifikasi</div>
       <div id="notif-list"></div>
     </div>
 
-    <!-- tabbar -->
     <div class="tabbar">
       <div class="tab" id="tab-beranda" onclick="A.go('beranda')">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5h-5v5H4Z" class="tk" stroke="#9AA89D" stroke-width="1.9" stroke-linejoin="round"/></svg>
@@ -215,7 +200,6 @@
     </div>
   </section>
 
-  <!-- ═══════════ LOGIN (clean) ═══════════ -->
   <section id="scr-login">
     <div class="statusbar">
       <span>09:41</span>
@@ -244,15 +228,11 @@
     <div class="home-ind"></div>
   </section>
 
-  <!-- modals -->
   <div id="modal-root"></div>
-  <!-- toasts -->
   <div id="toasts"></div>
   <div class="home-ind"></div>
   </div>
 </div>
-
-<div class="stage-caption">JAGA · Prototipe interaktif — semua data &amp; pembayaran simulasi</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="js/app.js"></script>

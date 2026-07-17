@@ -1,4 +1,3 @@
-/* ═══ JAGA app — actions & boot ═══ */
 import { $, $$, esc, nowHM, maskPhone, maskNik, rupiah } from './util.js';
 import { S, U, save, resetState, timer, clearTimers,
          zoneScore, zoneReportsToday, zoneTrigger, zoneAddVerified, menteng } from './state.js';
@@ -7,13 +6,11 @@ import { toast, pushNotif, renderNotifs, openModal, closeModal, closeX, setTabIc
          renderHome, renderChips, renderZoneSheet, renderLapor, renderProteksi, renderProfil, qrSvg } from './ui.js';
 import { maps, showMap, refreshZones, destroyMaps } from './maps.js';
 
-/* estimasi jumlah warga dari radius (deterministik) */
 const sosWarga = r => Math.round(r*r/1400 + 6);
 
 const A = window.A = {
   toast, closeModal,
 
-  /* ── navigasi ── */
   go(tab){
     U.tab = tab; U.notifOpen = false;
     $('#notif-panel').classList.add('hidden'); $('#notif-scrim').classList.add('hidden');
@@ -35,7 +32,6 @@ const A = window.A = {
     if(U.notifOpen){ S.unread = false; save(); $('#bell-dot').classList.add('hidden'); }
   },
 
-  /* ── peta ── */
   zoom(kind,dir){ const m = maps[kind]; if(m && m._container.isConnected) dir>0 ? m.zoomIn() : m.zoomOut(); },
   recenter(kind){ const m = maps[kind]; if(m && m._container.isConnected) m.flyTo([-6.1880,106.8340], kind==='mini'?13:13.5); },
   setFilter(f){
@@ -55,7 +51,6 @@ const A = window.A = {
   closeZone(){ U.selId = null; refreshZones(); renderZoneSheet(); },
   laporFrom(name){ U.selId = null; renderZoneSheet(); U.laporLoc = name; U.laporSent = false; this.go('lapor'); },
 
-  /* ── SOS radius ── */
   openSos(){
     U._sosRadius = U._sosRadius || 500;
     const opts = [300,500,1000];
@@ -95,7 +90,6 @@ const A = window.A = {
     }, 1600);
   },
 
-  /* ── login ── */
   openAccounts(){
     const accs = [
       { name:'Rina Wijaya',  email:'rina.wijaya@gmail.com',    c:'#7B1FA2' },
@@ -163,7 +157,6 @@ const A = window.A = {
     $('#scr-login').classList.remove('hidden');
   },
 
-  /* ── verifikasi NIK ── */
   openNik(reason){
     if(S.verified){ toast('Identitas Anda sudah terverifikasi.'); return; }
     openModal(
@@ -209,7 +202,6 @@ const A = window.A = {
   },
   _requireVerify(reason, next){ if(S.verified) return true; U.pending = next; this.openNik(reason); return false; },
 
-  /* ── anggota keluarga ── */
   openFamily(){
     const rows = S.family.length ? S.family.map((f,i)=>{
       const init = f.name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -264,7 +256,6 @@ const A = window.A = {
     if(U.tab==='profil') renderProfil();
   },
 
-  /* ── lapor ── */
   pickCat(c){
     U.laporCat = U.laporCat===c ? null : c;
     $$('#lapor-cats .cat').forEach(el=>el.classList.toggle('on', el.dataset.cat===U.laporCat));
@@ -309,7 +300,6 @@ const A = window.A = {
   },
   laporReset(){ U.laporSent = false; U.laporStage = 1; U.laporCat = null; U.laporText = ''; renderLapor(); },
 
-  /* ── bantuan otomatis (zone-aware) ── */
   _tryPayout(loc){
     loc = loc || 'Menteng';
     const trig = zoneTrigger(loc);
@@ -353,7 +343,6 @@ const A = window.A = {
     S.payoutHistory.unshift({ title:'Dana bantuan cair · Kel. '+loc, sub:'Kondisi wilayah memburuk · '+th+' laporan valid · ke '+PM[dk].name+' '+maskPhone(w), amt:'Rp1,5jt', date:'Hari ini' });
     save();
     pushNotif('#C4553A','Bantuan Rp1.500.000 terkirim','Ke '+PM[dk].name+' '+maskPhone(w)+' — didukung '+th+' laporan terverifikasi di '+loc+'.');
-    /* modal perayaan — supaya pencairan TIDAK mungkin terlewat */
     openModal(
       '<div style="text-align:center;padding:10px 4px">'+
       '<div class="hexnum" style="width:64px;height:70px;margin:0 auto 14px;background:var(--sirine)"><span style="font-size:22px">Rp</span></div>'+
@@ -369,7 +358,6 @@ const A = window.A = {
   },
   hidePayoutToast(){ $('#payout-toast').classList.add('hidden'); },
 
-  /* ── e-wallet ── */
   openConnect(k){
     const m = PM[k];
     openModal(
@@ -451,7 +439,6 @@ const A = window.A = {
     if(S._pendingPayout){ closeModal(); this._doPayout(S._pendingZone); }
   },
 
-  /* ── bayar iuran & aktivasi ── */
   pickMethod(k){
     if((k==='gopay'||k==='shopeepay') && !S.wallets[k]){ this.openConnect(k); return; }
     U.paySel = U.paySel===k ? null : k;
@@ -557,7 +544,6 @@ const A = window.A = {
   },
 };
 
-/* ═══ boot ═══ */
 function enterApp(){
   $('#scr-login').classList.add('hidden');
   $('#scr-app').classList.remove('hidden');

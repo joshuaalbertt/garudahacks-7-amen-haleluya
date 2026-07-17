@@ -1,5 +1,3 @@
-/* Server statis mini untuk JAGA (tanpa dependency).
-   Jalankan:  node serve.js   →  http://localhost:8199 */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');

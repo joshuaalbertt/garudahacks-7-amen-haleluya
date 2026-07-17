@@ -1,4 +1,3 @@
-/* ═══ state aplikasi + matematika zona (semua lewat RiskEngine) ═══ */
 import { RiskEngine } from './engine.js';
 import { Z, MENTENG } from './data.js';
 
@@ -35,7 +34,6 @@ try {
 export function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 export function resetState(){ S = fresh(); save(); }
 
-/* ui-only state (tidak dipersist) */
 export const U = {
   tab:'beranda', filter:'semua', selId:null, notifOpen:false,
   laporCat:null, laporText:'', laporLoc:'Menteng', laporSent:false, laporStage:1,
@@ -47,9 +45,6 @@ export function timer(fn, ms){
 }
 export function clearTimers(){ U.timers.forEach(clearTimeout); U.timers = []; }
 
-/* ── skor per-kelurahan: MURNI rumus engine  Z·RealTime + (1−Z)·Baseline ──
-   n awal = N0 (kredibilitas parsial); RT awal dikalibrasi supaya skor awal = angka tampilan.
-   Tiap laporan terverifikasi: n+1 (Z naik) dan RT +4 (cap 100) → skor naik lewat DUA jalur rumus. */
 const N0 = 8, RT_STEP = 4;
 
 export function zoneBase(name){ const z = Z.find(z=>z[0]===name); return z ? z[1] : 44; }
@@ -75,7 +70,6 @@ export function zoneAddVerified(name){
   S.zoneReports[name] = zoneReportsToday(name) + 1;
 }
 
-/* derived: kondisi kelurahan pengguna (Menteng) — premi mingguan SELALU dari skor terkini */
 export function menteng(){
   const score   = zoneScore('Menteng');
   const rToday  = zoneReportsToday('Menteng');

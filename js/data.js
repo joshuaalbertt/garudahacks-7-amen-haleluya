@@ -1,6 +1,3 @@
-/* ═══ Data statis & konfigurasi wilayah pilot ═══ */
-
-/* [nama, skor-awal-tampilan, lat, lng] — 20 kelurahan Jakarta Pusat */
 export const Z = [
   ['Menteng',78,-6.1956,106.8322],['Gondangdia',44,-6.1862,106.8330],['Cikini',62,-6.1938,106.8402],
   ['Kebon Sirih',35,-6.1828,106.8258],['Pegangsaan',28,-6.1995,106.8442],['Senen',71,-6.1768,106.8422],
@@ -12,10 +9,9 @@ export const Z = [
 ];
 
 export const CENTER = [-6.1880, 106.8340];
-export const PILOT  = { s:-6.238, w:106.772, n:-6.128, e:106.908 };   // batas area pilot
+export const PILOT  = { s:-6.238, w:106.772, n:-6.128, e:106.908 };
 export const HARD   = { s:-6.42,  w:106.55,  n:-5.95,  e:107.12  };   // batas geser maksimum
 
-/* Parameter kelurahan pengguna untuk demo (λ=2 → ambang pencairan = 5 laporan/hari) */
 export const MENTENG = { city:'Kota Jakarta Pusat', lambdaDaily:2 };
 
 export const PM = {

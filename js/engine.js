@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   JAGA RISK ENGINE — port 1:1 dari backend Python (JagaRiskEngine)
+   JAGA RISK ENGINE — dari backend Python (JagaRiskEngine)
    Rumus:
    - Baseline Index : ((R_city − R_min) / (R_total − R_min)) × M + 1
    - Kredibilitas Z : sqrt(min(n / n_f, 1))          [Limited Fluctuation]

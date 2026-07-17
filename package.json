@@ -1,0 +1,21 @@
+{
+  "name": "jaga-hacks",
+  "version": "1.0.0",
+  "description": "**Guard Your Ground. Warga Jaga Warga**",
+  "main": "serve.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshuaalbertt/garudahacks-7-amen-haleluya.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/joshuaalbertt/garudahacks-7-amen-haleluya/issues"
+  },
+  "homepage": "https://github.com/joshuaalbertt/garudahacks-7-amen-haleluya#readme"
+}

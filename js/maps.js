@@ -1,4 +1,3 @@
-/* ═══ Leaflet: init tahan-banting, zona dinamis, deteksi keluar area ═══ */
 import { esc } from './util.js';
 import { S, U, zoneScore } from './state.js';
 import { Z, CENTER, PILOT, HARD, band } from './data.js';
@@ -19,7 +18,6 @@ function mapFallback(){
     if(el && !el._done) el.innerHTML = '<div class="map-fallback"><b style="font-size:13px">Peta tidak dapat dimuat</b><span class="serif" style="font-size:12px;color:var(--teks2)">Periksa koneksi internet lalu muat ulang.</span></div>';
   });
 }
-/* paksa Leaflet ukur ulang beberapa kali → cegah tile kepotong */
 function nudge(map){
   [0,60,180,360,650].forEach(ms => setTimeout(()=>{ try{ if(map._container.isConnected) map.invalidateSize({animate:false}); }catch(e){} }, ms));
 }
@@ -50,9 +48,6 @@ function initMap(kind){
     new ResizeObserver(()=>{ try{ if(map._container.isConnected) map.invalidateSize({animate:false}); }catch(e){} }).observe(el);
   }
 }
-/* pastikan map ada & terukur setelah view tampil.
-   PENTING: pakai setTimeout, BUKAN requestAnimationFrame — rAF dibekukan
-   browser saat tab tidak fokus, membuat peta kadang tidak ter-init. */
 export function showMap(kind){
   leafletReady(()=>{
     let tries = 0;
@@ -105,7 +100,6 @@ export function destroyMaps(){
 window.addEventListener('resize', ()=>{
   Object.values(maps).forEach(m=>{ if(m && m._container.isConnected){ try{ m.invalidateSize({animate:false}); }catch(e){} } });
 });
-/* re-init & ukur ulang saat halaman kembali terlihat */
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && S.user){
     if(U.tab==='beranda') showMap('mini');

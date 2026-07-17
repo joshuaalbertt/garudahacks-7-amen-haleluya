@@ -1,4 +1,3 @@
-/* ═══ util kecil ═══ */
 export const $  = (s, el) => (el || document).querySelector(s);
 export const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
 

@@ -2,7 +2,7 @@
   --hutan:#1B3A2D; --kabut:#EEF3EF; --sirine:#C4553A; --daun:#2E6B4F;
   --tanah:#8B7355; --malam:#0F2118; --putih:#FAFCFB; --abu:#E2E9E3;
   --teks2:#4A6356; --bg:#F2F6F2; --amber:#B8853C;
-  /* layering */
+
   --z-map-ctl:400; --z-sheet:520; --z-payout:540; --z-tab:600;
   --z-notif:820; --z-modal:1000; --z-toast:1120;
 }
@@ -20,7 +20,6 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 .hidden{display:none!important}
 .serif{font-family:'Source Serif 4',Georgia,serif;font-style:italic}
 
-/* ═══ iOS DEVICE FRAME ═══ */
 .device{
   position:relative;width:min(430px,100vw);height:min(902px,calc(100dvh - 54px));min-height:560px;
   background:#0a0a0a;border-radius:54px;padding:11px;
@@ -51,7 +50,6 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 }
 .stage-caption{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.32);text-align:center}
 
-/* ═══════════ LOGIN — clean white ═══════════ */
 #scr-login{position:absolute;inset:0;z-index:60;background:#fff;display:flex;flex-direction:column;overflow:hidden;border-radius:44px}
 .login-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 34px;text-align:center}
 .login-logo{margin-bottom:22px}
@@ -67,7 +65,6 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 .lbtn-e:hover{background:var(--daun)}
 #scr-login .home-ind{background:rgba(27,58,45,.22)}
 
-/* ═══════════ APP ═══════════ */
 #scr-app{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);border-radius:44px;overflow:hidden}
 .hdr{flex-shrink:0;padding:6px 18px 10px;position:relative;z-index:120;background:var(--bg)}
 .hdr-row{display:flex;align-items:center;justify-content:space-between;position:relative;height:40px}
@@ -82,10 +79,9 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 
 .content{flex:1;position:relative;overflow:hidden}
 .view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:8px 16px 122px;display:flex;flex-direction:column;gap:15px}
-.view>*{flex-shrink:0}            /* cegah flexbox mengompres & memotong kartu */
+.view>*{flex-shrink:0}
 .view-map{padding:0;overflow:hidden}
 
-/* cards */
 .card{background:#fff;border:1px solid var(--abu);border-radius:16px;box-shadow:0 1px 3px rgba(27,58,45,.04)}
 .card-dark{background:var(--hutan);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;color:#fff}
 .card-dark .kawung{opacity:.05}
@@ -118,13 +114,11 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 .btn-o:hover{background:var(--bg)}
 .btn[disabled]{background:#CBBDB6!important;cursor:not-allowed;transform:none;filter:none}
 
-/* verify banner */
 .vbanner{display:flex;gap:12px;align-items:center;background:rgba(200,155,60,.08);border:1px solid rgba(200,155,60,.35);border-radius:14px;padding:12px 14px}
 .vbanner .t{font-size:12.5px;font-weight:600}
 .vbanner .s{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:11.5px;color:var(--teks2);line-height:1.45;margin-top:1px}
 .vbanner button{flex-shrink:0;background:var(--amber);color:#fff;border:none;border-radius:9px;padding:9px 13px;font-size:11px;font-weight:600;cursor:pointer}
 
-/* maps */
 .mapbox{position:relative;height:280px;border-top:1px solid var(--kabut)}
 .mapel{position:absolute;inset:0;z-index:1;background:#E9EEE9}
 .leaflet-container{background:#E9EEE9;font-family:'Space Grotesk',Arial,sans-serif}
@@ -147,7 +141,6 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 .zchip .n{font-size:13.5px;font-weight:700;color:#fff;border:2px solid #fff;border-radius:15px;padding:1px 9px;box-shadow:0 2px 6px rgba(15,33,24,.28);line-height:1.5}
 .zchip .k{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--hutan);background:rgba(255,255,255,.9);border-radius:7px;padding:1px 6px;white-space:nowrap}
 
-/* notif panel — di atas semuanya kecuali modal */
 #notif-scrim{position:absolute;inset:0;background:rgba(15,33,24,.35);z-index:var(--z-notif)}
 #notif-panel{position:absolute;top:52px;left:14px;right:14px;z-index:calc(var(--z-notif) + 1);background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(15,33,24,.35);overflow:hidden;animation:up .22s ease;max-height:70%;overflow-y:auto}
 #notif-panel .nh{padding:14px 18px 10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--tanah);border-bottom:1px solid var(--kabut);position:sticky;top:0;background:#fff}
@@ -158,13 +151,11 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 .nrow .b{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:12px;color:var(--teks2);line-height:1.5;margin-top:1px}
 .nrow .tm{font-size:9.5px;color:var(--tanah);flex-shrink:0}
 
-/* SOS floating */
 .sos-fab{position:absolute;right:16px;bottom:112px;z-index:var(--z-sheet);width:60px;height:60px;border-radius:50%;background:var(--sirine);color:#fff;border:3px solid #fff;box-shadow:0 8px 22px rgba(196,85,58,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-weight:700;animation:sosPulse 2.4s infinite}
 .sos-fab span{font-size:14px;letter-spacing:.5px;line-height:1}
 .sos-fab small{font-size:6.5px;letter-spacing:1px;text-transform:uppercase;margin-top:2px;opacity:.85}
 @keyframes sosPulse{0%,100%{box-shadow:0 8px 22px rgba(196,85,58,.45),0 0 0 0 rgba(196,85,58,.4)}70%{box-shadow:0 8px 22px rgba(196,85,58,.45),0 0 0 14px rgba(196,85,58,0)}}
 
-/* tabbar */
 .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:var(--z-tab);background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border-top:1px solid var(--abu);display:flex;align-items:flex-end;justify-content:space-around;padding:8px 8px 26px}
 .tab{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;width:60px;padding-top:6px}
 .tab span{font-size:8.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#9AA89D}
@@ -172,7 +163,6 @@ input,textarea{font-family:'Space Grotesk',Arial,sans-serif}
 .tab-lapor{margin-top:-22px;width:64px}
 .tab-lapor .hexbtn{width:50px;height:54px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--sirine);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(196,85,58,.35)}
 
-/* forms */
 .inp{width:100%;border:1.5px solid var(--abu);border-radius:11px;background:#fff;padding:13px 15px;font-size:14px;color:var(--hutan);outline:none}
 .inp:focus{border-color:var(--daun)}
 .inp-err{border-color:var(--sirine)!important}
@@ -185,7 +175,6 @@ textarea.inp{min-height:92px;resize:none;font-family:'Source Serif 4',Georgia,se
 .cat.on i{background:var(--sirine)}
 .cat.on b{color:#fff}
 
-/* modals */
 .modal{position:absolute;inset:0;z-index:var(--z-modal);background:rgba(15,33,24,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .18s ease}
 .modal.center{align-items:center;padding:24px}
 .mcard{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:20px 20px 34px;animation:up .26s ease;max-height:86%;overflow-y:auto}
